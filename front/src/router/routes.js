@@ -3,19 +3,18 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') }
-    ]
-  },
-  {
-    path: '/comprar',
-    component: () => import('layouts/PedidoLayout.vue'),
-    children: [
-      // { path: '', component: () => import('pages/ComprarPage.vue') } // opcional
+      { path: '', component: () => import('pages/IndexPage.vue') },
+      { path: 'pago-exitoso', component: () => import('pages/PagoExitoso.vue') },
+      { path: 'pago-cancelado', component: () => import('pages/PagoCancelado.vue') }
     ]
   },
 
-  // Always leave this as last one,
-  // but you can also remove it
+  {
+    path: '/comprar',
+    component: () => import('layouts/PedidoLayout.vue'),
+    children: []
+  },
+
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue')
