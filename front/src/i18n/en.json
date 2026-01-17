@@ -1,0 +1,30 @@
+{
+  "menu": {
+    "home": "Home",
+    "faq": "FAQ",
+    "gallery": "Gallery",
+    "buy": "Buy tickets"
+  },
+  "tickets": {
+    "title": "Book tickets",
+    "subtitle": "Stripe Checkout test with adults/kids",
+    "euQuestion": "Are you an EU citizen?",
+    "yes": "Yes",
+    "no": "No",
+    "date": "Date",
+    "time": "Time",
+    "adult": "Adult",
+    "kid": "Child",
+    "subtotal": "Subtotal",
+    "pay": "Pay with Stripe",
+    "total": "Total"
+  },
+  "success": {
+    "title": "Payment successful!",
+    "subtitle": "Your payment was processed."
+  },
+  "cancel": {
+    "title": "Payment canceled",
+    "subtitle": "No charge was made."
+  }
+}

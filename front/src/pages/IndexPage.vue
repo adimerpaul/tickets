@@ -7,25 +7,40 @@
           <!-- Header -->
           <div class="row items-center q-mb-md">
             <div>
-              <div class="text-h6 text-weight-bold">Reservar entradas</div>
-              <div class="text-caption text-grey-7">Prueba Stripe Checkout con adultos/niños</div>
+              <div class="text-h6 text-weight-bold">{{ $t('tickets.title') }}</div>
+              <div class="text-caption text-grey-7">{{ $t('tickets.subtitle') }}</div>
             </div>
+
             <q-space />
-            <q-chip color="primary" text-color="white" dense>
-              Total: {{ formatEUR(total) }}
+
+            <q-chip color="primary" text-color="white" dense class="q-mr-sm">
+              {{ $t('tickets.total') }}: {{ formatEUR(total) }}
             </q-chip>
+
+            <q-btn flat dense no-caps icon="language" :label="lang.toUpperCase()">
+              <q-menu>
+                <q-list style="min-width: 160px">
+                  <q-item clickable v-close-popup @click="setLang('es')">
+                    <q-item-section>Español</q-item-section>
+                  </q-item>
+                  <q-item clickable v-close-popup @click="setLang('en')">
+                    <q-item-section>English</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
+            </q-btn>
           </div>
 
           <!-- EU + Fecha/Hora -->
           <div class="row q-col-gutter-md">
             <div class="col-12">
-              <div class="text-subtitle2 text-weight-medium">¿Eres ciudadano de la Unión Europea?</div>
+              <div class="text-subtitle2 text-weight-medium">{{ $t('tickets.euQuestion') }}</div>
               <q-option-group
                 v-model="isEU"
                 inline
                 :options="[
-                  { label: 'Sí', value: true },
-                  { label: 'No', value: false }
+                  { label: $t('tickets.yes'), value: true },
+                  { label: $t('tickets.no'), value: false }
                 ]"
                 class="q-mt-xs"
               />
@@ -37,7 +52,7 @@
                 type="date"
                 dense
                 outlined
-                label="Fecha"
+                :label="$t('tickets.date')"
               >
                 <template #prepend><q-icon name="event" /></template>
               </q-input>
@@ -49,7 +64,7 @@
                 :options="timeOptions"
                 dense
                 outlined
-                label="Hora"
+                :label="$t('tickets.time')"
                 emit-value
                 map-options
                 clearable
@@ -62,19 +77,19 @@
           <q-separator class="q-my-md" />
 
           <!-- Entradas -->
-          <div class="text-subtitle2 text-weight-bold q-mb-sm">Entradas</div>
+          <div class="text-subtitle2 text-weight-bold q-mb-sm">{{ $t('tickets.entries') }}</div>
 
           <!-- Adultos -->
           <q-card flat bordered class="q-pa-md q-mb-sm">
             <div class="row items-center">
               <div class="col">
-                <div class="text-subtitle2 text-weight-medium">Adulto</div>
-                <div class="text-caption text-grey-7">+17 años</div>
+                <div class="text-subtitle2 text-weight-medium">{{ $t('tickets.adult') }}</div>
+                <div class="text-caption text-grey-7">{{ $t('tickets.adultHint') }}</div>
               </div>
 
               <div class="col-auto text-right q-mr-md">
                 <div class="text-subtitle2 text-weight-bold">{{ formatEUR(priceAdult) }}</div>
-                <div class="text-caption text-grey-7">c/u</div>
+                <div class="text-caption text-grey-7">{{ $t('tickets.each') }}</div>
               </div>
 
               <div class="col-auto">
@@ -89,13 +104,13 @@
           <q-card flat bordered class="q-pa-md">
             <div class="row items-center">
               <div class="col">
-                <div class="text-subtitle2 text-weight-medium">Niño</div>
-                <div class="text-caption text-grey-7">-17 años</div>
+                <div class="text-subtitle2 text-weight-medium">{{ $t('tickets.kid') }}</div>
+                <div class="text-caption text-grey-7">{{ $t('tickets.kidHint') }}</div>
               </div>
 
               <div class="col-auto text-right q-mr-md">
                 <div class="text-subtitle2 text-weight-bold">{{ formatEUR(priceKid) }}</div>
-                <div class="text-caption text-grey-7">c/u</div>
+                <div class="text-caption text-grey-7">{{ $t('tickets.each') }}</div>
               </div>
 
               <div class="col-auto">
@@ -111,7 +126,7 @@
           <!-- Resumen -->
           <div class="row items-center">
             <div class="col">
-              <div class="text-caption text-grey-7">Subtotal</div>
+              <div class="text-caption text-grey-7">{{ $t('tickets.subtotal') }}</div>
               <div class="text-subtitle1 text-weight-bold">{{ formatEUR(total) }}</div>
             </div>
 
@@ -121,7 +136,7 @@
                 color="black"
                 no-caps
                 icon="payments"
-                label="Pagar con Stripe"
+                :label="$t('tickets.pay')"
                 :loading="loading"
                 :disable="total <= 0"
                 @click="onBuy"
@@ -130,7 +145,7 @@
           </div>
 
           <div class="text-caption text-grey-7 q-mt-sm">
-            * Esto te redirige a Stripe Checkout (modo prueba).
+            {{ $t('tickets.note') }}
           </div>
         </q-card>
 
@@ -145,17 +160,15 @@ export default {
   data () {
     return {
       loading: false,
+      lang: localStorage.getItem('lang') || 'es',
 
-      // form
       isEU: true,
       date: '2026-01-17',
       time: null,
 
-      // cantidades
       adults: 1,
       kids: 0,
 
-      // precios (EUR)
       priceAdult: 33,
       priceKid: 16.50,
 
@@ -173,7 +186,13 @@ export default {
     }
   },
   methods: {
+    setLang (l) {
+      this.lang = l
+      this.$setLang(l) // boot/i18n.js
+      this.$q.notify({ type: 'positive', message: `Idioma: ${l.toUpperCase()}` })
+    },
     formatEUR (n) {
+      // opcional: si quieres formateo según idioma, dímelo y lo ajustamos
       return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n)
     },
     inc (type) {
@@ -184,7 +203,6 @@ export default {
       if (type === 'adult') this.adults = Math.max(0, this.adults - 1)
       if (type === 'kid') this.kids = Math.max(0, this.kids - 1)
     },
-
     async onBuy () {
       try {
         this.loading = true
@@ -194,9 +212,7 @@ export default {
           { name: 'Entrada Niño', qty: this.kids, unit_amount: Math.round(this.priceKid * 100) }
         ].filter(i => i.qty > 0)
 
-        // IMPORTANTE: esto debe apuntar a Laravel (API)
-        // Si tienes baseURL bien configurado en axios boot, bastará con '/stripe/checkout'
-        const { data } = await this.$axios.post('http://localhost:8000/api/stripe/checkout', {
+        const { data } = await this.$axios.post('stripe/checkout', {
           items,
           customer_email: null,
           metadata: {
