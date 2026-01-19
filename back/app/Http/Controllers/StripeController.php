@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Stripe\Stripe;
 use Stripe\Checkout\Session as CheckoutSession;
 use Stripe\Webhook;
-
+use App\Mail\TicketPaidMail;
+use Illuminate\Support\Facades\Mail;
 class StripeController extends Controller
 {
     public function checkout(Request $request)
@@ -16,7 +18,7 @@ class StripeController extends Controller
             'items' => 'required|array|min:1',
             'items.*.name' => 'required|string',
             'items.*.qty' => 'required|integer|min:1',
-            'items.*.unit_amount' => 'required|integer|min:1', // en centavos
+            'items.*.unit_amount' => 'required|integer|min:1', // centavos
             'customer_email' => 'nullable|email',
             'metadata' => 'nullable|array',
         ]);
@@ -27,10 +29,8 @@ class StripeController extends Controller
             return [
                 'price_data' => [
                     'currency' => 'eur',
-                    'product_data' => [
-                        'name' => $it['name'],
-                    ],
-                    'unit_amount' => (int) $it['unit_amount'], // centavos
+                    'product_data' => ['name' => $it['name']],
+                    'unit_amount' => (int) $it['unit_amount'],
                 ],
                 'quantity' => (int) $it['qty'],
             ];
@@ -48,7 +48,22 @@ class StripeController extends Controller
             'metadata' => $validated['metadata'] ?? [],
         ]);
 
-        // aquí podrías guardar "pendiente" en tu BD con $session->id
+        // Total en centavos (calculado desde tus items)
+        $amountTotal = 0;
+        foreach ($validated['items'] as $it) {
+            $amountTotal += ((int)$it['unit_amount']) * ((int)$it['qty']);
+        }
+
+        // ✅ Guardar PENDING en BD
+        Order::create([
+            'session_id' => $session->id,
+            'email' => $validated['customer_email'] ?? null,
+            'amount_total' => $amountTotal,
+            'currency' => 'eur',
+            'status' => 'PENDING',
+            'metadata' => $validated['metadata'] ?? null,
+            'items' => $validated['items'],
+        ]);
 
         return response()->json([
             'checkout_url' => $session->url,
@@ -70,20 +85,36 @@ class StripeController extends Controller
             return response('Invalid signature', 400);
         }
 
-        // Evento más importante para “pagado”
         if ($event->type === 'checkout.session.completed') {
             $session = $event->data->object;
 
-            // $session->payment_status === 'paid'
-            // $session->id
-            // $session->amount_total (centavos)
-            // $session->metadata (tu data)
+            $order = Order::where('session_id', $session->id)->first();
 
-            Log::info('Stripe paid', ['session_id' => $session->id]);
+            if (!$order) {
+                Log::warning('Order not found for session', ['session_id' => $session->id]);
+                return response('ok', 200);
+            }
 
-            // 1) buscar en tu BD por session_id
-            // 2) marcar como PAGADO
-            // 3) emitir ticket / enviar email / etc.
+            if ($order->status === 'PAID') {
+                return response('ok', 200);
+            }
+
+            // email fallback
+            $email = $order->email
+                ?? ($session->customer_details->email ?? null)
+                ?? ($session->customer_email ?? null);
+
+            $order->email = $email;
+            $order->status = 'PAID';
+            $order->paid_at = now();
+            $order->payment_intent_id = $session->payment_intent ?? null;
+            $order->save();
+
+            if ($order->email) {
+                Mail::to($order->email)->send(new TicketPaidMail($order));
+            } else {
+                Log::warning('Paid but no email to send', ['order_id' => $order->id]);
+            }
         }
 
         return response('ok', 200);
