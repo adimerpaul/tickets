@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StripeController;
+use App\Http\Controllers\OrderController;
+
 
 Route::post('/stripe/checkout', [StripeController::class, 'checkout']);
 Route::post('/stripe/webhook', [StripeController::class, 'webhook']);
@@ -24,4 +26,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/permissions', [App\Http\Controllers\UserController::class, 'permissions']);
     Route::get('/users/{user}/permissions', [App\Http\Controllers\UserController::class, 'userPermissions']);
     Route::put('/users/{user}/permissions', [App\Http\Controllers\UserController::class, 'updateUserPermissions']);
+
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/stats', [OrderController::class, 'stats']);
+    Route::get('/orders/{order}', [OrderController::class, 'show']);
+
+    // PDF (opcional backend)
+    Route::get('/orders/{order}/pdf', [OrderController::class, 'pdf']);
+    Route::get('/orders-pdf', [OrderController::class, 'pdfList']); // pdf del listado filtrado
 });
