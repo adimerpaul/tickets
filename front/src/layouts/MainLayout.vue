@@ -229,6 +229,23 @@
             <q-item-label class="text-white">Reportes</q-item-label>
           </q-item-section>
         </q-item>
+<!--        pedidos to-->
+        <q-item
+          dense
+          to="/pedido"
+          exact
+          clickable
+          class="menu-item"
+          active-class="menu-active"
+          v-close-popup
+        >
+          <q-item-section avatar>
+            <q-icon name="shopping_cart" class="text-white" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-white">Pedidos</q-item-label>
+          </q-item-section>
+        </q-item>
 
         <!-- FOOTER -->
         <div class="q-pa-md">

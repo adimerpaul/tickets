@@ -15,7 +15,7 @@ const routes = [
   },
 
   {
-    path: '/comprar',
+    path: '/pedido',
     component: () => import('layouts/PedidoLayout.vue'),
     children: []
   },
