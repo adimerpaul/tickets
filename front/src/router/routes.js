@@ -14,7 +14,10 @@ const routes = [
     component: () => import('layouts/PedidoLayout.vue'),
     children: []
   },
-
+  {
+    path: '/login',
+    component: () => import('layouts/Login.vue'),
+  },
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue')
