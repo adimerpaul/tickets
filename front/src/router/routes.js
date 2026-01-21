@@ -11,6 +11,12 @@ const routes = [
         component: () => import('pages/usuarios/Usuarios.vue'),
         meta: {requiresAuth: true, perm: 'Usuarios'}
       },
+      // http://localhost:9000/reservas?
+      {
+        path: '/reservas',
+        component: () => import('pages/ordenes/Orders.vue'),
+        meta: {requiresAuth: true, perm: 'Reservas'}
+      }
     ]
   },
 
