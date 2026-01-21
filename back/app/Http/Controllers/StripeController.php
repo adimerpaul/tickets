@@ -51,10 +51,12 @@ class StripeController extends Controller
         // Total en centavos (calculado desde tus items)
         $amountTotal = 0;
         foreach ($validated['items'] as $it) {
-            $amountTotal += ((int)$it['unit_amount']) * ((int)$it['qty']);
+//            error_log('Item: ' . json_encode($it));
+            $amountTotal += ((int)$it['unit_amount']/100) * ((int)$it['qty']);
         }
 
         // ✅ Guardar PENDING en BD
+//        error_log('validated: ' . json_encode($validated));
         Order::create([
             'session_id' => $session->id,
             'email' => $validated['customer_email'] ?? null,
@@ -87,6 +89,7 @@ class StripeController extends Controller
 
         if ($event->type === 'checkout.session.completed') {
             $session = $event->data->object;
+            error_log('Webhook checkout.session.completed received for session ID: ' . $session->id);
 
             $order = Order::where('session_id', $session->id)->first();
 
@@ -114,6 +117,23 @@ class StripeController extends Controller
                 Mail::to($order->email)->send(new TicketPaidMail($order));
             } else {
                 Log::warning('Paid but no email to send', ['order_id' => $order->id]);
+            }
+        }
+        if ($event->type === 'checkout.session.expired') {
+            $session = $event->data->object;
+            $order = Order::where('session_id', $session->id)->first();
+            if ($order && $order->status === 'PENDING') {
+                $order->status = 'EXPIRED';
+                $order->save();
+            }
+        }
+
+        if ($event->type === 'payment_intent.payment_failed') {
+            $pi = $event->data->object;
+            $order = Order::where('payment_intent_id', $pi->id)->first();
+            if ($order && $order->status === 'PENDING') {
+                $order->status = 'FAILED';
+                $order->save();
             }
         }
 
