@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
 
 class DatabaseSeeder extends Seeder
 {
@@ -29,5 +30,17 @@ class DatabaseSeeder extends Seeder
             'email' => '',
             'password' => 'admin123Admin',
         ]);
+        $permisos = [
+            'Dashboard',
+            'Usuarios',
+            'Reservas',
+            'Idiomas',
+            'Precios',
+            'Reportes'
+        ];;
+        foreach ($permisos as $permiso) {
+            Permission::create(['name' => $permiso]);
+        }
+        $userAdmin->givePermissionTo(Permission::all());
     }
 }
