@@ -175,6 +175,11 @@
                     <q-item-section avatar><q-icon name="edit_location" /></q-item-section>
                     <q-item-section>Cambiar localizador</q-item-section>
                   </q-item>
+<!--                  mandar correo-->
+                  <q-item clickable @click="enviarCorreo(o)" v-close-popup>
+                    <q-item-section avatar><q-icon name="email" /></q-item-section>
+                    <q-item-section>Enviar correo</q-item-section>
+                  </q-item>
                 </q-list>
               </q-btn-dropdown>
             </td>
@@ -515,6 +520,25 @@ export default {
     async openDetail (o) {
       this.detail = o
       this.detailDialog = true
+    },
+    enviarCorreo(o) {
+      console.log('Enviar correo para orden', o)
+      this.$q.dialog({
+        title: 'Enviar Correo',
+        message: '¿Desea enviar un correo con los detalles de la orden #' + o.id + ' a ' + (o.email || 'el email registrado') + '?',
+        cancel: true,
+        persistent: true
+      }).onOk(async () => {
+        try {
+          this.loading = true
+          await this.$axios.post(`orders/${o.id}/sendEmail`)
+          this.$alert.success('Correo enviado correctamente')
+        } catch (e) {
+          this.$alert.error(e.response?.data?.message || 'Error al enviar el correo')
+        } finally {
+          this.loading = false
+        }
+      })
     },
     changueLocalizador(o) {
       console.log('Cambiar localizador para orden', o)

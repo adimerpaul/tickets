@@ -174,61 +174,61 @@
         </q-item>
 
         <!-- IDIOMAS -->
-        <q-item
-          dense
-          to="/idiomas"
-          exact
-          clickable
-          class="menu-item"
-          active-class="menu-active"
-          v-close-popup
-          v-if="hasPermission('Idiomas')"
-        >
-          <q-item-section avatar>
-            <q-icon name="translate" class="text-white" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label class="text-white">Idiomas</q-item-label>
-          </q-item-section>
-        </q-item>
+<!--        <q-item-->
+<!--          dense-->
+<!--          to="/idiomas"-->
+<!--          exact-->
+<!--          clickable-->
+<!--          class="menu-item"-->
+<!--          active-class="menu-active"-->
+<!--          v-close-popup-->
+<!--          v-if="hasPermission('Idiomas')"-->
+<!--        >-->
+<!--          <q-item-section avatar>-->
+<!--            <q-icon name="translate" class="text-white" />-->
+<!--          </q-item-section>-->
+<!--          <q-item-section>-->
+<!--            <q-item-label class="text-white">Idiomas</q-item-label>-->
+<!--          </q-item-section>-->
+<!--        </q-item>-->
 
-        <!-- PRECIOS -->
-        <q-item
-          dense
-          to="/precios"
-          exact
-          clickable
-          class="menu-item"
-          active-class="menu-active"
-          v-close-popup
-          v-if="hasPermission('Precios')"
-        >
-          <q-item-section avatar>
-            <q-icon name="payments" class="text-white" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label class="text-white">Precios</q-item-label>
-          </q-item-section>
-        </q-item>
+<!--        &lt;!&ndash; PRECIOS &ndash;&gt;-->
+<!--        <q-item-->
+<!--          dense-->
+<!--          to="/precios"-->
+<!--          exact-->
+<!--          clickable-->
+<!--          class="menu-item"-->
+<!--          active-class="menu-active"-->
+<!--          v-close-popup-->
+<!--          v-if="hasPermission('Precios')"-->
+<!--        >-->
+<!--          <q-item-section avatar>-->
+<!--            <q-icon name="payments" class="text-white" />-->
+<!--          </q-item-section>-->
+<!--          <q-item-section>-->
+<!--            <q-item-label class="text-white">Precios</q-item-label>-->
+<!--          </q-item-section>-->
+<!--        </q-item>-->
 
-        <!-- REPORTES -->
-        <q-item
-          dense
-          to="/reportes"
-          exact
-          clickable
-          class="menu-item"
-          active-class="menu-active"
-          v-close-popup
-          v-if="hasPermission('Reportes')"
-        >
-          <q-item-section avatar>
-            <q-icon name="bar_chart" class="text-white" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label class="text-white">Reportes</q-item-label>
-          </q-item-section>
-        </q-item>
+<!--        &lt;!&ndash; REPORTES &ndash;&gt;-->
+<!--        <q-item-->
+<!--          dense-->
+<!--          to="/reportes"-->
+<!--          exact-->
+<!--          clickable-->
+<!--          class="menu-item"-->
+<!--          active-class="menu-active"-->
+<!--          v-close-popup-->
+<!--          v-if="hasPermission('Reportes')"-->
+<!--        >-->
+<!--          <q-item-section avatar>-->
+<!--            <q-icon name="bar_chart" class="text-white" />-->
+<!--          </q-item-section>-->
+<!--          <q-item-section>-->
+<!--            <q-item-label class="text-white">Reportes</q-item-label>-->
+<!--          </q-item-section>-->
+<!--        </q-item>-->
 <!--        pedidos to-->
         <q-item
           dense
