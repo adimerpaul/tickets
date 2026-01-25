@@ -3,151 +3,151 @@
     <div class="row justify-center">
       <div class="col-12 col-md-8 col-lg-6">
 
-<!--        <q-card flat bordered class="q-pa-md">-->
-<!--          &lt;!&ndash; Header &ndash;&gt;-->
-<!--          <div class="row items-center q-mb-md">-->
-<!--            <div>-->
-<!--              <div class="text-h6 text-weight-bold">{{ $t('tickets.title') }}</div>-->
-<!--              <div class="text-caption text-grey-7">{{ $t('tickets.subtitle') }}</div>-->
-<!--            </div>-->
+        <q-card flat bordered class="q-pa-md">
+          <!-- Header -->
+          <div class="row items-center q-mb-md">
+            <div>
+              <div class="text-h6 text-weight-bold">{{ $t('tickets.title') }}</div>
+              <div class="text-caption text-grey-7">{{ $t('tickets.subtitle') }}</div>
+            </div>
 
-<!--            <q-space />-->
+            <q-space />
 
-<!--            <q-chip color="primary" text-color="white" dense class="q-mr-sm">-->
-<!--              {{ $t('tickets.total') }}: {{ formatEUR(total) }}-->
-<!--            </q-chip>-->
+            <q-chip color="primary" text-color="white" dense class="q-mr-sm">
+              {{ $t('tickets.total') }}: {{ formatEUR(total) }}
+            </q-chip>
 
-<!--            <q-btn flat dense no-caps icon="language" :label="lang.toUpperCase()">-->
-<!--              <q-menu>-->
-<!--                <q-list style="min-width: 160px">-->
-<!--                  <q-item clickable v-close-popup @click="setLang('es')">-->
-<!--                    <q-item-section>Español</q-item-section>-->
-<!--                  </q-item>-->
-<!--                  <q-item clickable v-close-popup @click="setLang('en')">-->
-<!--                    <q-item-section>English</q-item-section>-->
-<!--                  </q-item>-->
-<!--                </q-list>-->
-<!--              </q-menu>-->
-<!--            </q-btn>-->
-<!--          </div>-->
+            <q-btn flat dense no-caps icon="language" :label="lang.toUpperCase()">
+              <q-menu>
+                <q-list style="min-width: 160px">
+                  <q-item clickable v-close-popup @click="setLang('es')">
+                    <q-item-section>Español</q-item-section>
+                  </q-item>
+                  <q-item clickable v-close-popup @click="setLang('en')">
+                    <q-item-section>English</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
+            </q-btn>
+          </div>
 
-<!--          &lt;!&ndash; EU + Fecha/Hora &ndash;&gt;-->
-<!--          <div class="row q-col-gutter-md">-->
-<!--            <div class="col-12">-->
-<!--              <div class="text-subtitle2 text-weight-medium">{{ $t('tickets.euQuestion') }}</div>-->
-<!--              <q-option-group-->
-<!--                v-model="isEU"-->
-<!--                inline-->
-<!--                :options="[-->
-<!--                  { label: $t('tickets.yes'), value: true },-->
-<!--                  { label: $t('tickets.no'), value: false }-->
-<!--                ]"-->
-<!--                class="q-mt-xs"-->
-<!--              />-->
-<!--            </div>-->
+          <!-- EU + Fecha/Hora -->
+          <div class="row q-col-gutter-md">
+            <div class="col-12">
+              <div class="text-subtitle2 text-weight-medium">{{ $t('tickets.euQuestion') }}</div>
+              <q-option-group
+                v-model="isEU"
+                inline
+                :options="[
+                  { label: $t('tickets.yes'), value: true },
+                  { label: $t('tickets.no'), value: false }
+                ]"
+                class="q-mt-xs"
+              />
+            </div>
 
-<!--            <div class="col-12 col-md-6">-->
-<!--              <q-input-->
-<!--                v-model="date"-->
-<!--                type="date"-->
-<!--                dense-->
-<!--                outlined-->
-<!--                :label="$t('tickets.date')"-->
-<!--              >-->
-<!--                <template #prepend><q-icon name="event" /></template>-->
-<!--              </q-input>-->
-<!--            </div>-->
+            <div class="col-12 col-md-6">
+              <q-input
+                v-model="date"
+                type="date"
+                dense
+                outlined
+                :label="$t('tickets.date')"
+              >
+                <template #prepend><q-icon name="event" /></template>
+              </q-input>
+            </div>
 
-<!--            <div class="col-12 col-md-6">-->
-<!--              <q-select-->
-<!--                v-model="time"-->
-<!--                :options="timeOptions"-->
-<!--                dense-->
-<!--                outlined-->
-<!--                :label="$t('tickets.time')"-->
-<!--                emit-value-->
-<!--                map-options-->
-<!--                clearable-->
-<!--              >-->
-<!--                <template #prepend><q-icon name="schedule" /></template>-->
-<!--              </q-select>-->
-<!--            </div>-->
-<!--          </div>-->
+            <div class="col-12 col-md-6">
+              <q-select
+                v-model="time"
+                :options="timeOptions"
+                dense
+                outlined
+                :label="$t('tickets.time')"
+                emit-value
+                map-options
+                clearable
+              >
+                <template #prepend><q-icon name="schedule" /></template>
+              </q-select>
+            </div>
+          </div>
 
-<!--          <q-separator class="q-my-md" />-->
+          <q-separator class="q-my-md" />
 
-<!--          &lt;!&ndash; Entradas &ndash;&gt;-->
-<!--          <div class="text-subtitle2 text-weight-bold q-mb-sm">{{ $t('tickets.entries') }}</div>-->
+          <!-- Entradas -->
+          <div class="text-subtitle2 text-weight-bold q-mb-sm">{{ $t('tickets.entries') }}</div>
 
-<!--          &lt;!&ndash; Adultos &ndash;&gt;-->
-<!--          <q-card flat bordered class="q-pa-md q-mb-sm">-->
-<!--            <div class="row items-center">-->
-<!--              <div class="col">-->
-<!--                <div class="text-subtitle2 text-weight-medium">{{ $t('tickets.adult') }}</div>-->
-<!--                <div class="text-caption text-grey-7">{{ $t('tickets.adultHint') }}</div>-->
-<!--              </div>-->
+          <!-- Adultos -->
+          <q-card flat bordered class="q-pa-md q-mb-sm">
+            <div class="row items-center">
+              <div class="col">
+                <div class="text-subtitle2 text-weight-medium">{{ $t('tickets.adult') }}</div>
+                <div class="text-caption text-grey-7">{{ $t('tickets.adultHint') }}</div>
+              </div>
 
-<!--              <div class="col-auto text-right q-mr-md">-->
-<!--                <div class="text-subtitle2 text-weight-bold">{{ formatEUR(priceAdult) }}</div>-->
-<!--                <div class="text-caption text-grey-7">{{ $t('tickets.each') }}</div>-->
-<!--              </div>-->
+              <div class="col-auto text-right q-mr-md">
+                <div class="text-subtitle2 text-weight-bold">{{ formatEUR(priceAdult) }}</div>
+                <div class="text-caption text-grey-7">{{ $t('tickets.each') }}</div>
+              </div>
 
-<!--              <div class="col-auto">-->
-<!--                <q-btn round dense flat icon="remove" @click="dec('adult')" />-->
-<!--                <q-chip class="q-mx-sm" square>{{ adults }}</q-chip>-->
-<!--                <q-btn round dense flat icon="add" @click="inc('adult')" />-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </q-card>-->
+              <div class="col-auto">
+                <q-btn round dense flat icon="remove" @click="dec('adult')" />
+                <q-chip class="q-mx-sm" square>{{ adults }}</q-chip>
+                <q-btn round dense flat icon="add" @click="inc('adult')" />
+              </div>
+            </div>
+          </q-card>
 
-<!--          &lt;!&ndash; Niños &ndash;&gt;-->
-<!--          <q-card flat bordered class="q-pa-md">-->
-<!--            <div class="row items-center">-->
-<!--              <div class="col">-->
-<!--                <div class="text-subtitle2 text-weight-medium">{{ $t('tickets.kid') }}</div>-->
-<!--                <div class="text-caption text-grey-7">{{ $t('tickets.kidHint') }}</div>-->
-<!--              </div>-->
+          <!-- Niños -->
+          <q-card flat bordered class="q-pa-md">
+            <div class="row items-center">
+              <div class="col">
+                <div class="text-subtitle2 text-weight-medium">{{ $t('tickets.kid') }}</div>
+                <div class="text-caption text-grey-7">{{ $t('tickets.kidHint') }}</div>
+              </div>
 
-<!--              <div class="col-auto text-right q-mr-md">-->
-<!--                <div class="text-subtitle2 text-weight-bold">{{ formatEUR(priceKid) }}</div>-->
-<!--                <div class="text-caption text-grey-7">{{ $t('tickets.each') }}</div>-->
-<!--              </div>-->
+              <div class="col-auto text-right q-mr-md">
+                <div class="text-subtitle2 text-weight-bold">{{ formatEUR(priceKid) }}</div>
+                <div class="text-caption text-grey-7">{{ $t('tickets.each') }}</div>
+              </div>
 
-<!--              <div class="col-auto">-->
-<!--                <q-btn round dense flat icon="remove" @click="dec('kid')" />-->
-<!--                <q-chip class="q-mx-sm" square>{{ kids }}</q-chip>-->
-<!--                <q-btn round dense flat icon="add" @click="inc('kid')" />-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </q-card>-->
+              <div class="col-auto">
+                <q-btn round dense flat icon="remove" @click="dec('kid')" />
+                <q-chip class="q-mx-sm" square>{{ kids }}</q-chip>
+                <q-btn round dense flat icon="add" @click="inc('kid')" />
+              </div>
+            </div>
+          </q-card>
 
-<!--          <q-separator class="q-my-md" />-->
+          <q-separator class="q-my-md" />
 
-<!--          &lt;!&ndash; Resumen &ndash;&gt;-->
-<!--          <div class="row items-center">-->
-<!--            <div class="col">-->
-<!--              <div class="text-caption text-grey-7">{{ $t('tickets.subtotal') }}</div>-->
-<!--              <div class="text-subtitle1 text-weight-bold">{{ formatEUR(total) }}</div>-->
-<!--            </div>-->
+          <!-- Resumen -->
+          <div class="row items-center">
+            <div class="col">
+              <div class="text-caption text-grey-7">{{ $t('tickets.subtotal') }}</div>
+              <div class="text-subtitle1 text-weight-bold">{{ formatEUR(total) }}</div>
+            </div>
 
-<!--            <div class="col-auto">-->
-<!--              <q-btn-->
-<!--                unelevated-->
-<!--                color="black"-->
-<!--                no-caps-->
-<!--                icon="payments"-->
-<!--                :label="$t('tickets.pay')"-->
-<!--                :loading="loading"-->
-<!--                :disable="total <= 0"-->
-<!--                @click="onBuy"-->
-<!--              />-->
-<!--            </div>-->
-<!--          </div>-->
+            <div class="col-auto">
+              <q-btn
+                unelevated
+                color="black"
+                no-caps
+                icon="payments"
+                :label="$t('tickets.pay')"
+                :loading="loading"
+                :disable="total <= 0"
+                @click="onBuy"
+              />
+            </div>
+          </div>
 
-<!--          <div class="text-caption text-grey-7 q-mt-sm">-->
-<!--            {{ $t('tickets.note') }}-->
-<!--          </div>-->
-<!--        </q-card>-->
+          <div class="text-caption text-grey-7 q-mt-sm">
+            {{ $t('tickets.note') }}
+          </div>
+        </q-card>
 
       </div>
     </div>
