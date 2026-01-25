@@ -80,15 +80,26 @@
                 <div class="row q-col-gutter-sm q-mb-lg">
                   <div class="col-12 col-sm-7">
                     <q-input
-                      v-model="date"
+                      v-model="dateLabel"
                       dense
                       outlined
                       bg-color="grey-1"
                       class="pill-input"
-                      :label="null"
                     >
-                      <template #prepend><q-icon name="event" /></template>
+                      <template #prepend>
+                        <q-icon name="event" />
+                      </template>
+
+                      <q-popup-proxy transition-show="scale" transition-hide="scale">
+                        <q-date
+                          v-model="date"
+                          mask="YYYY-MM-DD"
+                          minimal
+                          @update:model-value="onDateChange"
+                        />
+                      </q-popup-proxy>
                     </q-input>
+
                   </div>
 
                   <div class="col-12 col-sm-5">
@@ -101,9 +112,10 @@
                       class="pill-input"
                       emit-value
                       map-options
-                      :label="null"
                     >
-                      <template #prepend><q-icon name="schedule" /></template>
+                      <template #prepend>
+                        <q-icon name="schedule" />
+                      </template>
                     </q-select>
                   </div>
                 </div>
@@ -216,13 +228,13 @@ export default {
   name: 'IndexPage',
   data () {
     return {
+      date: null,
+      dateLabel: 'Selecciona una fecha',
       slide: 1,
       autoplay: true,
       tab: 'tickets',
 
       loading: false,
-
-      date: 'Jue, 5 marzo 2026',
       time: '10:00 A.M.',
 
       nationality: 'NACIONAL',
@@ -231,8 +243,8 @@ export default {
       adults: 1,
       kids: 0,
 
-      priceAdult: 10,
-      priceKid: 5,
+      priceAdult: 10.5,
+      priceKid: 5.5,
 
       timeOptions: [
         '09:00 A.M.', '10:00 A.M.', '11:00 A.M.',
@@ -246,6 +258,18 @@ export default {
     }
   },
   methods: {
+    onDateChange (val) {
+      if (!val) return
+
+      const d = new Date(val + 'T00:00:00')
+
+      this.dateLabel = d.toLocaleDateString('es-ES', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      })
+    },
     formatEUR (n) {
       return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n)
     },
@@ -258,9 +282,11 @@ export default {
       if (type === 'kid') this.kids = Math.max(0, this.kids - 1)
     },
     async onBuy () {
-      // aquí dejas tu Stripe igual que lo tienes
-      // this.loading = true
-      // setTimeout(() => { this.loading = false }, 800)
+      // deve selecionar un fecha
+      if (!this.date) {
+        this.$alert.error('Por favor selecciona una fecha para tu visita.')
+        return
+      }
       try {
         this.loading = true
 
