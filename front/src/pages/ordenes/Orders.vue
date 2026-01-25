@@ -128,6 +128,7 @@
         <q-markup-table dense flat wrap-cells>
           <thead>
           <tr>
+            <th class="text-center" style="width:110px">Acciones</th>
             <th class="text-left" style="width:70px">#</th>
             <th class="text-left">Estado</th>
             <th class="text-left">Email</th>
@@ -136,7 +137,6 @@
             <th class="text-left" style="width:170px">Creado</th>
             <th class="text-left" style="width:170px">Pagado</th>
             <th class="text-left">Session</th>
-            <th class="text-center" style="width:110px">Acciones</th>
           </tr>
           </thead>
 
@@ -155,6 +155,27 @@
           </tr>
 
           <tr v-else v-for="o in orders" :key="o.id">
+            <td class="text-center">
+<!--              <q-btn dense flat round icon="visibility" @click="openDetail(o)" />-->
+<!--              <q-btn dense flat round icon="picture_as_pdf" @click="pdfOneJs(o)" />-->
+              <q-btn-dropdown dense no-caps size="10px" label="Opciones" color="primary">
+                <q-list>
+                  <q-item clickable @click="openDetail(o)" v-close-popup>
+                    <q-item-section avatar><q-icon name="visibility" /></q-item-section>
+                    <q-item-section>Ver detalle</q-item-section>
+                  </q-item>
+                  <q-item clickable @click="pdfOneJs(o)" v-close-popup>
+                    <q-item-section avatar><q-icon name="picture_as_pdf" /></q-item-section>
+                    <q-item-section>Descargar PDF</q-item-section>
+                  </q-item>
+<!--                  colocar localizador-->
+                  <q-item clickable @click="changueLocalizador(o)" v-close-popup>
+                    <q-item-section avatar><q-icon name="edit_location" /></q-item-section>
+                    <q-item-section>Cambiar localizador</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-btn-dropdown>
+            </td>
             <td class="text-left text-weight-bold">#{{ o.id }}</td>
 
             <td class="text-left">
@@ -198,10 +219,6 @@
               </div>
             </td>
 
-            <td class="text-center">
-              <q-btn dense flat round icon="visibility" @click="openDetail(o)" />
-              <q-btn dense flat round icon="picture_as_pdf" @click="pdfOneJs(o)" />
-            </td>
           </tr>
           </tbody>
         </q-markup-table>
@@ -254,6 +271,16 @@
 
         <q-card-section class="q-pt-sm">
           <div class="row q-col-gutter-md">
+            <div class="col-12">
+              <q-list bordered separator class="rounded-borders">
+                <q-item>
+                  <q-item-section>
+                    <q-item-label caption>Session ID</q-item-label>
+                    <q-item-label class="ellipsis">{{ detail.session_id || '-' }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </div>
             <div class="col-12 col-md-6">
               <q-list bordered separator class="rounded-borders">
                 <q-item>
@@ -266,12 +293,6 @@
                   <q-item-section>
                     <q-item-label caption>Total</q-item-label>
                     <q-item-label>{{ formatMoney(detail.amount_total, detail.currency) }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Session</q-item-label>
-                    <q-item-label class="text-grey-8">{{ detail.session_id }}</q-item-label>
                   </q-item-section>
                 </q-item>
                 <q-item>
@@ -485,37 +506,53 @@ export default {
     },
 
     async openDetail (o) {
-      this.detail = {}
+      this.detail = o
       this.detailDialog = true
-      try {
-        const { data } = await this.$axios.get(`orders/${o.id}`)
-        this.detail = data
-      } catch (e) {
-        this.$alert.error(e.response?.data?.message || 'No se pudo cargar detalle')
-      }
+    },
+    changueLocalizador(o) {
+      console.log('Cambiar localizador para orden', o)
+      this.$q.dialog({
+        title: 'Cambiar Localizador',
+        message: 'Ingrese el nuevo localizador para la orden #' + o.id,
+        prompt: {
+          model: o.localizador || '',
+          type: 'text'
+        },
+        cancel: true,
+        persistent: true
+      }).onOk(async newLocalizador => {
+        try {
+          this.loading = true
+          const updatedMetadata = {localizador: newLocalizador }
+          await this.$axios.put(`orders/${o.id}`,  updatedMetadata)
+          this.$alert.success('Localizador actualizado correctamente')
+          this.reloadAll()
+        } catch (e) {
+          this.$alert.error(e.response?.data?.message || 'Error al actualizar el localizador')
+        } finally {
+          this.loading = false
+        }
+      })
     },
 
     // ===== PDF (JS) =====
     pdfOneJs (o) {
-      const doc = new jsPDF()
-
-      doc.setFontSize(14)
-      doc.text(`Orden #${o.id}`, 14, 16)
-
-      doc.setFontSize(10)
-      doc.text(`Estado: ${o.status}`, 14, 24)
-      doc.text(`Email: ${o.email || '-'}`, 14, 30)
-      doc.text(`Total: ${this.formatMoney(o.amount_total, o.currency)}`, 14, 36)
-      doc.text(`Session: ${o.session_id || '-'}`, 14, 42)
-
-      const items = (o.items || []).map(it => [it.name, String(it.qty), String(it.unit_amount)])
-      autoTable(doc, {
-        startY: 50,
-        head: [['Nombre', 'Cantidad', 'Unit (centavos)']],
-        body: items.length ? items : [['Sin items', '', '']]
-      })
-
-      doc.save(`order_${o.id}.pdf`)
+      this.loading = true
+      this.$axios.get(`orders/${o.id}/pdfEntradas`, { responseType: 'blob' })
+        .then(({ data }) => {
+          const blob = new Blob([data], { type: 'application/pdf' })
+          const link = document.createElement('a')
+          link.href = window.URL.createObjectURL(blob)
+          link.download = `order_${o.id}.pdf`
+          link.click()
+          window.URL.revokeObjectURL(link.href)
+        })
+        .catch(e => {
+          this.$alert.error(e.response?.data?.message || 'No se pudo descargar el PDF')
+        })
+        .finally(() => {
+          this.loading = false
+        })
     },
 
     pdfListJs () {
