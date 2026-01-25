@@ -20,6 +20,10 @@ class Order extends Model implements AuditableContract
         'paid_at',
         'metadata',
         'items',
+        'dni',
+        'nombre_completo',
+        'nacionalidad',
+        'entrada_tipo',
     ];
 
     protected $casts = [

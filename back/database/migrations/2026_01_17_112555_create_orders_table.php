@@ -30,6 +30,13 @@ return new class extends Migration {
             $table->json('metadata')->nullable();
             $table->json('items')->nullable();
 
+            $table->string('dni')->nullable();
+            $table->string('nombre_completo')->nullable();
+
+//            nacionalidada entrada
+            $table->string('nacionalidad')->nullable();
+            $table->string('entrada_tipo')->nullable();
+
             $table->softDeletes();
             $table->timestamps();
         });

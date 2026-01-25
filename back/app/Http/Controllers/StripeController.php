@@ -42,7 +42,8 @@ class StripeController extends Controller
             'mode' => 'payment',
             'payment_method_types' => ['card'],
             'line_items' => $lineItems,
-            'success_url' => rtrim(env('FRONTEND_URL'), '/') . '/pago-exitoso?session_id={CHECKOUT_SESSION_ID}',
+//            'success_url' => rtrim(env('FRONTEND_URL'), '/') . '/pago-exitoso?session_id={CHECKOUT_SESSION_ID}',
+            'success_url' => rtrim(env('FRONTEND_URL'), '/') . '/pedido?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url'  => rtrim(env('FRONTEND_URL'), '/') . '/pago-cancelado',
             'customer_email' => $validated['customer_email'] ?? null,
             'metadata' => $validated['metadata'] ?? [],
@@ -69,7 +70,11 @@ class StripeController extends Controller
             'currency' => 'eur',
             'status' => 'PENDING',
             'metadata' => $validated['metadata'] ?? null,
-            'items' => $itemsForDb,             // unit_amount en euros (float con 2 dec)
+            'items' => $itemsForDb,
+            'dni' => $validated['metadata']['dni'] ?? null,
+            'nombre_completo' => $validated['metadata']['nombre_completo'] ?? null,
+            'nacionalidad' => $validated['metadata']['nacionalidad'] ?? null,
+            'entrada_tipo' => $validated['metadata']['entrada_tipo'] ?? null,
         ]);
 
         return response()->json([
