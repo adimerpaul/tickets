@@ -47,12 +47,18 @@ class StripeController extends Controller
             'customer_email' => $validated['customer_email'] ?? null,
             'metadata' => $validated['metadata'] ?? [],
         ]);
+//        validated['items'] dividir entre 100
+        $validated['items']= array_map(function ($it) {
+            $it['unit_amount'] = (int)$it['unit_amount']/100;
+            return $it;
+        }, $validated['items']);
 
         // Total en centavos (calculado desde tus items)
         $amountTotal = 0;
         foreach ($validated['items'] as $it) {
 //            error_log('Item: ' . json_encode($it));
-            $amountTotal += ((int)$it['unit_amount']/100) * ((int)$it['qty']);
+//            $amountTotal += ((int)$it['unit_amount']/100) * ((int)$it['qty']);
+            $amountTotal += ((int)$it['unit_amount']) * ((int)$it['qty']);
         }
 
         // ✅ Guardar PENDING en BD
@@ -113,11 +119,11 @@ class StripeController extends Controller
             $order->payment_intent_id = $session->payment_intent ?? null;
             $order->save();
 
-            if ($order->email) {
-                Mail::to($order->email)->send(new TicketPaidMail($order));
-            } else {
-                Log::warning('Paid but no email to send', ['order_id' => $order->id]);
-            }
+//            if ($order->email) {
+//                Mail::to($order->email)->send(new TicketPaidMail($order));
+//            } else {
+//                Log::warning('Paid but no email to send', ['order_id' => $order->id]);
+//            }
         }
         if ($event->type === 'checkout.session.expired') {
             $session = $event->data->object;

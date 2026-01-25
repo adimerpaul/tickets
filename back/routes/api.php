@@ -29,9 +29,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/stats', [OrderController::class, 'stats']);
+    Route::put('/orders/{order}', [OrderController::class, 'update']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
 
     // PDF (opcional backend)
-    Route::get('/orders/{order}/pdf', [OrderController::class, 'pdf']);
+    Route::get('/orders/{order}/pdfEntradas', [OrderController::class, 'pdfEntradas']);
     Route::get('/orders-pdf', [OrderController::class, 'pdfList']); // pdf del listado filtrado
 });

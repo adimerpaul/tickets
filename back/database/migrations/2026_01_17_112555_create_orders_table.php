@@ -16,6 +16,7 @@ return new class extends Migration {
 
             // Cliente
             $table->string('email')->nullable();
+            $table->string('localizador')->nullable();
 
             // Totales (en centavos)
             $table->integer('amount_total')->default(0);
@@ -29,6 +30,7 @@ return new class extends Migration {
             $table->json('metadata')->nullable();
             $table->json('items')->nullable();
 
+            $table->softDeletes();
             $table->timestamps();
         });
     }

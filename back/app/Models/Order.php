@@ -3,13 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
-class Order extends Model
+use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable as AuditableTrait;
+class Order extends Model implements AuditableContract
 {
+    use AuditableTrait,SoftDeletes;
     protected $fillable = [
         'session_id',
         'payment_intent_id',
         'email',
+        'localizador',
         'amount_total',
         'currency',
         'status',

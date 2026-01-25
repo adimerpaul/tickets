@@ -6,9 +6,44 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class OrderController extends Controller
 {
+    function update(Request $request, Order $order)
+    {
+        $data = $request->only([
+            'localizador',
+        ]);
+
+        $order->update($data);
+
+        return response()->json($order);
+    }
+    function pdfEntradas(Order $order)
+    {
+        $items = $order->items ?? [];
+
+        foreach ($items as $i => $it) {
+            $it = is_array($it) ? (object)$it : $it;
+
+            $payload = $it->name . '|' . $order->localizador;
+
+            $svg = \QrCode::format('svg')->size(180)->generate($payload);
+
+            $it->qr_src = 'data:image/svg+xml;base64,' . base64_encode($svg);
+
+            $items[$i] = $it;
+        }
+
+        $order->items = $items;
+
+        $pdf = \PDF::loadView('pdf.order_entries', ['order' => $order])
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream("order_{$order->id}_entries.pdf");
+    }
+
     public function index(Request $request)
     {
         // filtros
