@@ -67,7 +67,7 @@
                     </div>
                     <div class="col" style="text-align:right;">
                         <div class="label">Total Orden</div>
-                        <div class="value">{{ number_format($total / 100, 2) }} {{ $currency }}</div>
+                        <div class="value">{{ number_format($total, 2) }} {{ $currency }}</div>
                         <div class="label">Email</div>
                         <div class="value">{{ $order->email }}</div>
                         <div class="label">Localizador</div>

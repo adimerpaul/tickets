@@ -25,52 +25,51 @@ class StripeController extends Controller
 
         Stripe::setApiKey(config('services.stripe.secret'));
 
+        // 1) Line items para Stripe (centavos, int)
         $lineItems = array_map(function ($it) {
             return [
                 'price_data' => [
                     'currency' => 'eur',
                     'product_data' => ['name' => $it['name']],
-                    'unit_amount' => (int) $it['unit_amount'],
+                    'unit_amount' => (int) $it['unit_amount'], // centavos
                 ],
                 'quantity' => (int) $it['qty'],
             ];
         }, $validated['items']);
 
-        $session = CheckoutSession::create([
+        // 2) Crear sesión de Stripe
+        $session = \Stripe\Checkout\Session::create([
             'mode' => 'payment',
             'payment_method_types' => ['card'],
             'line_items' => $lineItems,
-
             'success_url' => rtrim(env('FRONTEND_URL'), '/') . '/pago-exitoso?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url'  => rtrim(env('FRONTEND_URL'), '/') . '/pago-cancelado',
-
             'customer_email' => $validated['customer_email'] ?? null,
             'metadata' => $validated['metadata'] ?? [],
         ]);
-//        validated['items'] dividir entre 100
-        $validated['items']= array_map(function ($it) {
-            $it['unit_amount'] = (int)$it['unit_amount']/100;
+
+        // 3) Preparar items para guardar en BD (EUR con 2 decimales)
+        $itemsForDb = array_map(function ($it) {
+            $it['unit_amount'] = round(((float) $it['unit_amount']) / 100, 2); // de centavos a euros
+            $it['qty'] = (int) $it['qty'];
             return $it;
         }, $validated['items']);
 
-        // Total en centavos (calculado desde tus items)
-        $amountTotal = 0;
-        foreach ($validated['items'] as $it) {
-//            error_log('Item: ' . json_encode($it));
-//            $amountTotal += ((int)$it['unit_amount']/100) * ((int)$it['qty']);
-            $amountTotal += ((int)$it['unit_amount']) * ((int)$it['qty']);
+        // 4) Calcular total (EUR con 2 decimales)
+        $amountTotal = 0.00;
+        foreach ($itemsForDb as $it) {
+            $amountTotal = round($amountTotal + ((float)$it['unit_amount'] * (int)$it['qty']), 2);
         }
 
-        // ✅ Guardar PENDING en BD
-//        error_log('validated: ' . json_encode($validated));
+        // 5) Guardar orden PENDING en BD
         Order::create([
             'session_id' => $session->id,
             'email' => $validated['customer_email'] ?? null,
-            'amount_total' => $amountTotal,
+            'amount_total' => $amountTotal,     // ej: 12.50 / 37.00
             'currency' => 'eur',
             'status' => 'PENDING',
             'metadata' => $validated['metadata'] ?? null,
-            'items' => $validated['items'],
+            'items' => $itemsForDb,             // unit_amount en euros (float con 2 dec)
         ]);
 
         return response()->json([

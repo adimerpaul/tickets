@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->string('localizador')->nullable();
 
             // Totales (en centavos)
-            $table->integer('amount_total')->default(0);
+            $table->decimal('amount_total', 10, 2)->default(0);
             $table->string('currency', 10)->default('eur');
 
             // Estado
