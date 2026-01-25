@@ -130,6 +130,8 @@
           <tr>
             <th class="text-center" style="width:110px">Acciones</th>
             <th class="text-left" style="width:70px">#</th>
+<!--            localizador-->
+            <th class="text-left" style="width:100px">Localizador</th>
             <th class="text-left">Estado</th>
             <th class="text-left">Email</th>
             <th class="text-right" style="width:120px">Total</th>
@@ -177,6 +179,11 @@
               </q-btn-dropdown>
             </td>
             <td class="text-left text-weight-bold">#{{ o.id }}</td>
+            <td class="text-left">
+              <div class="ellipsis" style="max-width: 100px">
+                {{ o.localizador || '-' }}
+              </div>
+            </td>
 
             <td class="text-left">
               <q-chip

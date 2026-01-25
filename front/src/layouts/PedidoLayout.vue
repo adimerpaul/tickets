@@ -220,6 +220,56 @@
 
       </q-page>
     </q-page-container>
+<!--    compraDialog: false,-->
+<!--    dni: '',-->
+<!--    email: '',-->
+<!--    nombre_completo: '',-->
+    <q-dialog v-model="compraDialog" persistent>
+      <q-card>
+        <q-card-section class="row items-center text-h6">
+<!--&lt;!&ndash;          Por favor completa tus datos para finalizar la compra&ndash;&gt; mas corto-->
+          Completa tus datos para finalizar la compra
+          <q-space />
+          <q-icon name="close" class="cursor-pointer" @click="compraDialog = false" />
+        </q-card-section>
+        <q-form @submit="continueBuy">
+        <q-card-section class="row q-col-gutter-md">
+          <div class="col-12 col-md-6">
+            <label class="text-subtitle2 text-grey-8">Nombre Completo</label>
+            <q-input v-model="nombre_completo" outlined dense :rules="[(val) => !!val || 'El nombre es requerido']" />
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="text-subtitle2 text-grey-8">DNI</label>
+            <q-input v-model="dni" outlined dense :rules="[(val) => !!val || 'El DNI es requerido']" />
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="text-subtitle2 text-grey-8">Correo Electrónico</label>
+            <q-input v-model="email" outlined dense :rules="[
+              (val) => !!val || 'El correo es requerido',
+              (val) => /.+@.+\..+/.test(val) || 'Correo inválido'
+            ]" />
+          </div>
+          <div class="col-12">
+<!--            detalle de la compra-->
+            <div class="text-subtitle2 text-grey-8 q-mt-md">Detalle de la Compra</div>
+            <div class="row q-col-gutter-sm">
+              <div class="col-6">Entradas Adulto ({{ adults }})</div>
+              <div class="col-6 text-right">{{ formatEUR(adults * priceAdult) }}</div>
+              <div class="col-6">Entradas Niño ({{ kids }})</div>
+              <div class="col-6 text-right">{{ formatEUR(kids * priceKid) }}</div>
+              <div class="col-6 text-weight-bold">Total</div>
+              <div class="col-6 text-right text-weight-bold">{{ formatEUR(total) }}</div>
+            </div>
+          </div>
+
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cerrar" color="grey" @click="compraDialog = false" no-caps :loading="loading" />
+          <q-btn unelevated label="Finalizar Compra" type="submit" class="buy-btn" no-caps :loading="loading" />
+        </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
   </q-layout>
 </template>
 
@@ -228,6 +278,10 @@ export default {
   name: 'IndexPage',
   data () {
     return {
+      compraDialog: false,
+      dni: '',
+      email: '',
+      nombre_completo: '',
       date: null,
       dateLabel: 'Selecciona una fecha',
       slide: 1,
@@ -252,10 +306,20 @@ export default {
       ].map(v => ({ label: v, value: v }))
     }
   },
+  mounted() {
+    // sessionId () {
+    //   return this.$route.query.session_id || null
+    // }
+    if (this.$route.query.session_id) {
+      // this.$router.replace({ query: {} })
+      // mmesaje de muchas grcias por su compra un equipo de soporte se pondra en contacto
+      this.$alert.success('¡Gracias por tu compra! Un equipo de soporte se pondrá en contacto contigo pronto.')
+    }
+  },
   computed: {
     total () {
       return (this.adults * this.priceAdult) + (this.kids * this.priceKid)
-    }
+    },
   },
   methods: {
     onDateChange (val) {
@@ -281,40 +345,71 @@ export default {
       if (type === 'adult') this.adults = Math.max(0, this.adults - 1)
       if (type === 'kid') this.kids = Math.max(0, this.kids - 1)
     },
+    continueBuy(){
+      this.loading = true
+      const items = [
+        { name: 'Entrada Adulto', qty: this.adults, unit_amount: Math.round(this.priceAdult * 100) },
+        { name: 'Entrada Niño', qty: this.kids, unit_amount: Math.round(this.priceKid * 100) }
+      ].filter(i => i.qty > 0)
+      this.$axios.post('stripe/checkout', {
+        items,
+        customer_email: this.email,
+        metadata: {
+          isEU: '1',
+          date: this.date,
+          time: this.time || '',
+          adults: String(this.adults),
+          kids: String(this.kids),
+          total: String(this.total),
+          dni: this.dni,
+          nombre_completo: this.nombre_completo,
+          nacionalidad: this.nationality,
+          entrada_tipo: this.ticketType
+        }
+      }).then(({data})=>{
+        window.location.href = data.checkout_url
+      }).catch(e=>{
+        console.error(e)
+        this.$alert.error('Error creando el checkout. Revisa consola/Network.')
+      }).finally(()=>{
+        this.loading = false
+      })
+    },
     async onBuy () {
       // deve selecionar un fecha
       if (!this.date) {
         this.$alert.error('Por favor selecciona una fecha para tu visita.')
-        return
+        return false
       }
-      try {
-        this.loading = true
-
-        const items = [
-          { name: 'Entrada Adulto', qty: this.adults, unit_amount: Math.round(this.priceAdult * 100) },
-          { name: 'Entrada Niño', qty: this.kids, unit_amount: Math.round(this.priceKid * 100) }
-        ].filter(i => i.qty > 0)
-
-        const { data } = await this.$axios.post('stripe/checkout', {
-          items,
-          customer_email: null,
-          metadata: {
-            isEU: this.isEU ? '1' : '0',
-            date: this.date,
-            time: this.time || '',
-            adults: String(this.adults),
-            kids: String(this.kids),
-            total: String(this.total)
-          }
-        })
-
-        window.location.href = data.checkout_url
-      } catch (e) {
-        console.error(e)
-        this.$q.notify({ type: 'negative', message: 'Error creando el checkout. Revisa consola/Network.' })
-      } finally {
-        this.loading = false
-      }
+      this.compraDialog = true
+      // try {
+      //   this.loading = true
+      //
+      //   const items = [
+      //     { name: 'Entrada Adulto', qty: this.adults, unit_amount: Math.round(this.priceAdult * 100) },
+      //     { name: 'Entrada Niño', qty: this.kids, unit_amount: Math.round(this.priceKid * 100) }
+      //   ].filter(i => i.qty > 0)
+      //
+      //   const { data } = await this.$axios.post('stripe/checkout', {
+      //     items,
+      //     customer_email: null,
+      //     metadata: {
+      //       isEU: this.isEU ? '1' : '0',
+      //       date: this.date,
+      //       time: this.time || '',
+      //       adults: String(this.adults),
+      //       kids: String(this.kids),
+      //       total: String(this.total)
+      //     }
+      //   })
+      //
+      //   window.location.href = data.checkout_url
+      // } catch (e) {
+      //   console.error(e)
+      //   this.$q.notify({ type: 'negative', message: 'Error creando el checkout. Revisa consola/Network.' })
+      // } finally {
+      //   this.loading = false
+      // }
     }
   }
 }
