@@ -45,55 +45,55 @@
     </q-card>
 
     <!-- CARDS / STATS -->
-    <div class="row q-col-gutter-md q-mb-md">
-      <div class="col-12 col-sm-6 col-md-3">
-        <q-card flat bordered>
-          <q-item class="bg-grey-9 text-white">
-            <q-item-section avatar><q-icon name="all_inbox" size="34px" /></q-item-section>
-            <q-item-section>
-              <q-item-label caption class="text-white">Total</q-item-label>
-              <q-item-label class="text-h5">{{ stats.TOTAL || 0 }}</q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-card>
-      </div>
+<!--    <div class="row q-col-gutter-md q-mb-md">-->
+<!--      <div class="col-12 col-sm-6 col-md-3">-->
+<!--        <q-card flat bordered>-->
+<!--          <q-item class="bg-grey-9 text-white">-->
+<!--            <q-item-section avatar><q-icon name="all_inbox" size="34px" /></q-item-section>-->
+<!--            <q-item-section>-->
+<!--              <q-item-label caption class="text-white">Total</q-item-label>-->
+<!--              <q-item-label class="text-h5">{{ stats.TOTAL || 0 }}</q-item-label>-->
+<!--            </q-item-section>-->
+<!--          </q-item>-->
+<!--        </q-card>-->
+<!--      </div>-->
 
-      <div class="col-12 col-sm-6 col-md-3">
-        <q-card flat bordered>
-          <q-item class="bg-warning text-white">
-            <q-item-section avatar><q-icon name="hourglass_top" size="34px" /></q-item-section>
-            <q-item-section>
-              <q-item-label caption class="text-white">Pendientes</q-item-label>
-              <q-item-label class="text-h5">{{ stats.PENDING || 0 }}</q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-card>
-      </div>
+<!--      <div class="col-12 col-sm-6 col-md-3">-->
+<!--        <q-card flat bordered>-->
+<!--          <q-item class="bg-warning text-white">-->
+<!--            <q-item-section avatar><q-icon name="hourglass_top" size="34px" /></q-item-section>-->
+<!--            <q-item-section>-->
+<!--              <q-item-label caption class="text-white">Pendientes</q-item-label>-->
+<!--              <q-item-label class="text-h5">{{ stats.PENDING || 0 }}</q-item-label>-->
+<!--            </q-item-section>-->
+<!--          </q-item>-->
+<!--        </q-card>-->
+<!--      </div>-->
 
-      <div class="col-12 col-sm-6 col-md-3">
-        <q-card flat bordered>
-          <q-item class="bg-positive text-white">
-            <q-item-section avatar><q-icon name="check_circle" size="34px" /></q-item-section>
-            <q-item-section>
-              <q-item-label caption class="text-white">Pagadas</q-item-label>
-              <q-item-label class="text-h5">{{ stats.PAID || 0 }}</q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-card>
-      </div>
+<!--      <div class="col-12 col-sm-6 col-md-3">-->
+<!--        <q-card flat bordered>-->
+<!--          <q-item class="bg-positive text-white">-->
+<!--            <q-item-section avatar><q-icon name="check_circle" size="34px" /></q-item-section>-->
+<!--            <q-item-section>-->
+<!--              <q-item-label caption class="text-white">Pagadas</q-item-label>-->
+<!--              <q-item-label class="text-h5">{{ stats.PAID || 0 }}</q-item-label>-->
+<!--            </q-item-section>-->
+<!--          </q-item>-->
+<!--        </q-card>-->
+<!--      </div>-->
 
-      <div class="col-12 col-sm-6 col-md-3">
-        <q-card flat bordered>
-          <q-item class="bg-negative text-white">
-            <q-item-section avatar><q-icon name="error" size="34px" /></q-item-section>
-            <q-item-section>
-              <q-item-label caption class="text-white">Fallidas / Expiradas</q-item-label>
-              <q-item-label class="text-h5">{{ (stats.FAILED || 0) + (stats.EXPIRED || 0) }}</q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-card>
-      </div>
-    </div>
+<!--      <div class="col-12 col-sm-6 col-md-3">-->
+<!--        <q-card flat bordered>-->
+<!--          <q-item class="bg-negative text-white">-->
+<!--            <q-item-section avatar><q-icon name="error" size="34px" /></q-item-section>-->
+<!--            <q-item-section>-->
+<!--              <q-item-label caption class="text-white">Fallidas / Expiradas</q-item-label>-->
+<!--              <q-item-label class="text-h5">{{ (stats.FAILED || 0) + (stats.EXPIRED || 0) }}</q-item-label>-->
+<!--            </q-item-section>-->
+<!--          </q-item>-->
+<!--        </q-card>-->
+<!--      </div>-->
+<!--    </div>-->
 
     <!-- TABLA (QMarkupTable) -->
     <q-card flat bordered>
@@ -134,7 +134,7 @@
             <th class="text-left" style="width:100px">Localizador</th>
             <th class="text-left">Estado</th>
             <th class="text-left">Email</th>
-            <th class="text-right" style="width:120px">Total</th>
+<!--            <th class="text-right" style="width:120px">Total</th>-->
             <th class="text-left" style="width:90px">Moneda</th>
             <th class="text-left" style="width:170px">Creado</th>
             <th class="text-left" style="width:170px">Pagado</th>
@@ -206,9 +206,9 @@
               </div>
             </td>
 
-            <td class="text-right text-weight-bold">
-              {{ formatMoney(o.amount_total, o.currency) }}
-            </td>
+<!--            <td class="text-right text-weight-bold">-->
+<!--              {{ formatMoney(o.amount_total, o.currency) }}-->
+<!--            </td>-->
 
             <td class="text-left">
               <q-chip dense color="grey-3" text-color="black">
