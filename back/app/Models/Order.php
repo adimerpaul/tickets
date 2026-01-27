@@ -24,6 +24,7 @@ class Order extends Model implements AuditableContract
         'nombre_completo',
         'nacionalidad',
         'entrada_tipo',
+        'codigo_pedido',
     ];
 
     protected $casts = [

@@ -64,6 +64,7 @@ class StripeController extends Controller
 
         // 5) Guardar orden PENDING en BD
         Order::create([
+            'codigo_pedido'=>$this->generateOrderCode(),
             'session_id' => $session->id,
             'email' => $validated['customer_email'] ?? null,
             'amount_total' => $amountTotal,     // ej: 12.50 / 37.00
@@ -81,6 +82,16 @@ class StripeController extends Controller
             'checkout_url' => $session->url,
             'session_id' => $session->id,
         ]);
+    }
+    function generateOrderCode(){
+//        GEM000001 CODIGO DE PEDIDO
+        $lastOrder = Order::orderBy('id', 'desc')->first();
+        if(!$lastOrder){
+            return 'GEM000001';
+        }
+        $lastCode = $lastOrder->codigo_pedido;
+        $number = (int)substr($lastCode, 3) + 1;
+        return 'GEM' . str_pad($number, 6, '0', STR_PAD_LEFT);
     }
 
     public function webhook(Request $request)

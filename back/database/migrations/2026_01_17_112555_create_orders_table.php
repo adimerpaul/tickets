@@ -10,6 +10,7 @@ return new class extends Migration {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
 
+            $table->string('codigo_pedido')->nullable();
             // Stripe
             $table->string('session_id')->unique(); // cs_test_...
             $table->string('payment_intent_id')->nullable();
