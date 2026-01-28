@@ -35,7 +35,8 @@ class EventoSeeder extends Seeder
                     'categoria' => $it['categoria'],
                     'orden' => $orden++,
                     'regla_nacionalidad' => 'ALL',
-                    'moneda' => 'EGP',
+//                    'moneda' => 'EGP', euro
+                    'moneda' => 'EUR',
                 ]
             );
         }

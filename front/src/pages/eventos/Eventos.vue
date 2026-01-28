@@ -555,7 +555,7 @@ export default {
         capacidad: 100,
         activo: true,
         nota: '',
-        plan: '',
+        plan: 'Adulto',
         precio: 20
       },
 

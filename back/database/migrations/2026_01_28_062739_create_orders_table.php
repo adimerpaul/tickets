@@ -39,14 +39,13 @@ return new class extends Migration {
 //            nacionalidada entrada
             $table->string('nacionalidad')->nullable();
             $table->string('entrada_tipo')->nullable();
+            $table->dateTime('starts_at')->nullable();
+            $table->unsignedBigInteger('horario_adulto_id')->nullable();
+            $table->unsignedBigInteger('horario_nino_id')->nullable();
+            $table->unsignedInteger('adults')->default(0);
+            $table->unsignedInteger('kids')->default(0);
+
             $table->foreignId('evento_id')->constrained('eventos')->cascadeOnDelete();
-            $table->dateTime('starts_at')->nullable()->after('evento_id');
-
-            $table->unsignedBigInteger('horario_adulto_id')->nullable()->after('starts_at');
-            $table->unsignedBigInteger('horario_nino_id')->nullable()->after('horario_adulto_id');
-
-            $table->unsignedInteger('adults')->default(0)->after('horario_nino_id');
-            $table->unsignedInteger('kids')->default(0)->after('adults');
 
             $table->timestamps();
             $table->softDeletes();
