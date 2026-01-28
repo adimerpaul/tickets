@@ -153,113 +153,124 @@
             <q-item-label class="text-white">Usuarios</q-item-label>
           </q-item-section>
         </q-item>
-
-        <!-- RESERVAS -->
-<!--        <q-item-->
-<!--          dense-->
-<!--          to="/reservas"-->
-<!--          exact-->
-<!--          clickable-->
-<!--          class="menu-item"-->
-<!--          active-class="menu-active"-->
-<!--          v-close-popup-->
-<!--          v-if="hasPermission('Reservas')"-->
-<!--        >-->
-<!--          <q-item-section avatar>-->
-<!--            <q-icon name="event" class="text-white" />-->
-<!--          </q-item-section>-->
-<!--          <q-item-section>-->
-<!--            <q-item-label class="text-white">Reservas</q-item-label>-->
-<!--          </q-item-section>-->
-<!--        </q-item>-->
-<!--        atraccion egipto-->
-        <q-expansion-item dense expand-separator
-                          icon="add_circle"
-                          label="Egipto" active-class="menu-active" >
+        <q-item
+          dense
+          to="/eventos"
+          exact
+          clickable
+          class="menu-item"
+          active-class="menu-active"
+          v-close-popup
+          v-if="hasPermission('Eventos')"
+        >
+          <q-item-section avatar>
+            <q-icon name="event" class="text-white" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-white">Eventos</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-expansion-item
+          dense
+          expand-separator
+          icon="public"
+          label="Egipto"
+          active-class="menu-active"
+        >
           <q-list>
-<!--            <q-item :inset-level="0.3" dense to="/slams/nuevo-penal" exact clickable class="menu-item" active-class="menu-active" v-close-popup>-->
-<!--              <q-item-section avatar>-->
-<!--                <q-icon name="balance" class="text-white"/>-->
-<!--              </q-item-section>-->
-<!--              <q-item-section>-->
-<!--                <q-item-label class="text-white">Nuevo Proceso Penal</q-item-label>-->
-<!--              </q-item-section>-->
-<!--            </q-item>-->
-<!--            Giza plateau-->
-<!--            Egyptian Museum-->
-<!--            Sharm El Sheikh Museum-->
-<!--            Hurghada Museum-->
-<!--            Luxor Temple-->
-<!--            Karnak Temple-->
-<!--            Hatshepsut Temple-->
-<!--            Abu Simbel Temple-->
-<!--            Coptic Museum-->
-            <q-item :inset-level="0.3" dense to="/egipto/egyptian-museum" exact clickable class="menu-item" active-class="menu-active" v-close-popup>
+
+            <!-- Giza Plateau -->
+            <q-item :inset-level="0.3" dense to="/evento/giza-plateau" clickable class="menu-item" active-class="menu-active" v-close-popup>
               <q-item-section avatar>
-                <q-icon name="account_balance" class="text-white"/>
+                <q-icon name="landscape" color="amber-4" />
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-white">Giza plateau</q-item-label>
+                <q-item-label class="text-white">Giza Plateau</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item :inset-level="0.3" dense to="/egipto/sharm-el-sheikh-museum" exact clickable class="menu-item" active-class="menu-active" v-close-popup>
+
+            <!-- Egyptian Museum -->
+            <q-item :inset-level="0.3" dense to="/evento/egyptian-museum" clickable class="menu-item" active-class="menu-active" v-close-popup>
               <q-item-section avatar>
-                <q-icon name="account_balance" class="text-white"/>
+                <q-icon name="museum" color="cyan-4" />
               </q-item-section>
               <q-item-section>
                 <q-item-label class="text-white">Egyptian Museum</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item :inset-level="0.3" dense to="/egipto/hurghada-museum" exact clickable class="menu-item" active-class="menu-active" v-close-popup>
+
+            <!-- Sharm El Sheikh Museum -->
+            <q-item :inset-level="0.3" dense to="/evento/sharm-el-sheikh-museum" clickable class="menu-item" active-class="menu-active" v-close-popup>
               <q-item-section avatar>
-                <q-icon name="account_balance" class="text-white"/>
+                <q-icon name="beach_access" color="light-blue-4" />
               </q-item-section>
               <q-item-section>
                 <q-item-label class="text-white">Sharm El Sheikh Museum</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item :inset-level="0.3" dense to="/egipto/luxor-temple" exact clickable class="menu-item" active-class="menu-active" v-close-popup>
+
+            <!-- Hurghada Museum -->
+            <q-item :inset-level="0.3" dense to="/evento/hurghada-museum" clickable class="menu-item" active-class="menu-active" v-close-popup>
               <q-item-section avatar>
-                <q-icon name="account_balance" class="text-white"/>
+                <q-icon name="beach_access" color="teal-4" />
               </q-item-section>
               <q-item-section>
                 <q-item-label class="text-white">Hurghada Museum</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item :inset-level="0.3" dense to="/egipto/karnak-temple" exact clickable class="menu-item" active-class="menu-active" v-close-popup>
+
+            <!-- Luxor Temple -->
+            <q-item :inset-level="0.3" dense to="/evento/luxor-temple" clickable class="menu-item" active-class="menu-active" v-close-popup>
               <q-item-section avatar>
-                <q-icon name="account_balance" class="text-white"/>
+                <q-icon name="account_balance" color="orange-4" />
               </q-item-section>
               <q-item-section>
                 <q-item-label class="text-white">Luxor Temple</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item :inset-level="0.3" dense to="/egipto/hatshepsut-temple" exact clickable class="menu-item" active-class="menu-active" v-close-popup>
+
+            <!-- Karnak Temple -->
+            <q-item :inset-level="0.3" dense to="/evento/karnak-temple" clickable class="menu-item" active-class="menu-active" v-close-popup>
               <q-item-section avatar>
-                <q-icon name="account_balance" class="text-white"/>
+                <q-icon name="account_balance" color="deep-orange-4" />
               </q-item-section>
               <q-item-section>
                 <q-item-label class="text-white">Karnak Temple</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item :inset-level="0.3" dense to="/egipto/abu-simbel-temple" exact clickable class="menu-item" active-class="menu-active" v-close-popup>
+
+            <!-- Hatshepsut Temple -->
+            <q-item :inset-level="0.3" dense to="/evento/hatshepsut-temple" clickable class="menu-item" active-class="menu-active" v-close-popup>
               <q-item-section avatar>
-                <q-icon name="account_balance" class="text-white"/>
+                <q-icon name="account_balance" color="brown-4" />
               </q-item-section>
               <q-item-section>
                 <q-item-label class="text-white">Hatshepsut Temple</q-item-label>
               </q-item-section>
             </q-item>
-            <q-item :inset-level="0.3" dense to="/egipto/coptic-museum" exact clickable class="menu-item" active-class="menu-active" v-close-popup>
+
+            <!-- Abu Simbel -->
+            <q-item :inset-level="0.3" dense to="/evento/abu-simbel-temple" clickable class="menu-item" active-class="menu-active" v-close-popup>
               <q-item-section avatar>
-                <q-icon name="account_balance" class="text-white"/>
+                <q-icon name="temple_buddhist" color="amber-6" />
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-white">Abu Simbel Temple</q-item-label>
+                <q-item-label class="text-white">Abu Simbel</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <!-- Coptic Museum -->
+            <q-item :inset-level="0.3" dense to="/evento/coptic-museum" clickable class="menu-item" active-class="menu-active" v-close-popup>
+              <q-item-section avatar>
+                <q-icon name="church" color="purple-4" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-white">Coptic Museum</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
         </q-expansion-item>
+
 
         <!-- IDIOMAS -->
 <!--        <q-item-->

@@ -11,12 +11,22 @@ const routes = [
         component: () => import('pages/usuarios/Usuarios.vue'),
         meta: {requiresAuth: true, perm: 'Usuarios'}
       },
-      // http://localhost:9000/reservas?
+      // eventos
       {
-        path: '/reservas',
-        component: () => import('pages/ordenes/Orders.vue'),
-        meta: {requiresAuth: true, perm: 'Reservas'}
+        path: '/eventos',
+        component: () => import('pages/eventos/Eventos.vue'),
+        meta: {requiresAuth: true, perm: 'Egipto'}
+      },
+      {
+        path: '/evento/:site',
+        component: () => import('pages/eventos/SiteDetails.vue'),
+        meta: {requiresAuth: true, perm: 'Egipto'}
       }
+      // {
+      //   path: '/reservas',
+      //   component: () => import('pages/ordenes/Orders.vue'),
+      //   meta: {requiresAuth: true, perm: 'Reservas'}
+      // }
     ]
   },
 

@@ -166,20 +166,26 @@
                     <q-item-section avatar><q-icon name="visibility" /></q-item-section>
                     <q-item-section>Ver detalle</q-item-section>
                   </q-item>
-                  <q-item clickable @click="pdfOneJs(o)" v-close-popup>
-                    <q-item-section avatar><q-icon name="picture_as_pdf" /></q-item-section>
-                    <q-item-section>Descargar PDF</q-item-section>
-                  </q-item>
+<!--                  <q-item clickable @click="pdfOneJs(o)" v-close-popup>-->
+<!--                    <q-item-section avatar><q-icon name="picture_as_pdf" /></q-item-section>-->
+<!--                    <q-item-section>Descargar PDF</q-item-section>-->
+<!--                  </q-item>-->
 <!--                  colocar localizador-->
                   <q-item clickable @click="changueLocalizador(o)" v-close-popup>
                     <q-item-section avatar><q-icon name="edit_location" /></q-item-section>
                     <q-item-section>Cambiar localizador</q-item-section>
                   </q-item>
 <!--                  mandar correo-->
-                  <q-item clickable @click="enviarCorreo(o)" v-close-popup>
-                    <q-item-section avatar><q-icon name="email" /></q-item-section>
-                    <q-item-section>Enviar correo</q-item-section>
-                  </q-item>
+<!--                  <q-item clickable @click="enviarCorreo(o)" v-close-popup>-->
+<!--                    <q-item-section avatar><q-icon name="email" /></q-item-section>-->
+<!--                    <q-item-section>Enviar correo</q-item-section>-->
+<!--                  </q-item>-->
+<!--                  enviar 4 correos-->
+<!--                  4 Correos, 1 su pedpio est hacienod en proceso, 2 envio de las entradas , 3 su pedido no se pudo completar , 4 reembols, que haga el rembolso y cancelaro de stripe,  shodawn-->
+<!--                  <q-item clickable @click="enviarCorreo(o)" v-close-popup>-->
+<!--                    <q-item-section avatar><q-icon name="email" /></q-item-section>-->
+<!--                    <q-item-section> -->
+<!--                  </q-item>-->
                 </q-list>
               </q-btn-dropdown>
             </td>
