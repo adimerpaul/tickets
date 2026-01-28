@@ -388,6 +388,9 @@ import autoTable from 'jspdf-autotable'
 
 export default {
   name: 'OrdersPage',
+  props: {
+    site: {default: null}
+  },
   data () {
     return {
       loading: false,
@@ -419,12 +422,12 @@ export default {
     }
   },
 
-  watch: {
-    'filters.search' () { this.debouncedReload() },
-    'filters.status' () { this.goPage(1) },
-    'filters.from' () { this.goPage(1) },
-    'filters.to' () { this.goPage(1) }
-  },
+  // watch: {
+  //   'filters.search' () { this.debouncedReload() },
+  //   'filters.status' () { this.goPage(1) },
+  //   'filters.from' () { this.goPage(1) },
+  //   'filters.to' () { this.goPage(1) }
+  // },
 
   mounted () {
     this.reloadAll()
@@ -467,6 +470,7 @@ export default {
 
     buildParams () {
       return {
+        site: this.site || null,
         search: this.filters.search || null,
         status: this.filters.status || null,
         from: this.filters.from || null,
@@ -491,7 +495,7 @@ export default {
 
     reloadAll () {
       this.ordersGet()
-      this.statsGet()
+      // this.statsGet()
     },
 
     async ordersGet () {
@@ -510,18 +514,18 @@ export default {
       }
     },
 
-    async statsGet () {
-      try {
-        const { data } = await this.$axios.get('orders/stats', { params: {
-            search: this.filters.search || null,
-            from: this.filters.from || null,
-            to: this.filters.to || null
-          }})
-        this.stats = data || {}
-      } catch (e) {
-        // silencioso
-      }
-    },
+    // async statsGet () {
+    //   try {
+    //     const { data } = await this.$axios.get('orders/stats', { params: {
+    //         search: this.filters.search || null,
+    //         from: this.filters.from || null,
+    //         to: this.filters.to || null
+    //       }})
+    //     this.stats = data || {}
+    //   } catch (e) {
+    //     // silencioso
+    //   }
+    // },
 
     async openDetail (o) {
       this.detail = o

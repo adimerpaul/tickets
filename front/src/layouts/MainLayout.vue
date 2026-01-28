@@ -153,6 +153,8 @@
             <q-item-label class="text-white">Usuarios</q-item-label>
           </q-item-section>
         </q-item>
+
+        <!-- EVENTOS CRUD -->
         <q-item
           dense
           to="/eventos"
@@ -170,165 +172,50 @@
             <q-item-label class="text-white">Eventos</q-item-label>
           </q-item-section>
         </q-item>
+
+        <!-- EVENTOS POR PAÍS (DINÁMICO) -->
         <q-expansion-item
+          v-for="grp in $store.menuEventosByPais"
+          :key="grp.pais"
           dense
           expand-separator
           icon="public"
-          label="Egipto"
-          active-class="menu-active"
+          :label="grp.pais"
+          v-if="$store.menuEventosByPais.length"
         >
           <q-list>
-
-            <!-- Giza Plateau -->
-            <q-item :inset-level="0.3" dense to="/evento/giza-plateau" clickable class="menu-item" active-class="menu-active" v-close-popup>
+            <q-item
+              v-for="ev in grp.eventos"
+              :key="ev.id"
+              :to="`/evento/${ev.slug}`"
+              clickable
+              v-close-popup
+              dense
+              :inset-level="0.3"
+              active-class="menu-active"
+            >
               <q-item-section avatar>
-                <q-icon name="landscape" color="amber-4" />
+                <!-- viene del backend -->
+                <q-icon :name="ev.icon || 'event'" :color="ev.color || 'grey-4'" />
               </q-item-section>
-              <q-item-section>
-                <q-item-label class="text-white">Giza Plateau</q-item-label>
-              </q-item-section>
-            </q-item>
 
-            <!-- Egyptian Museum -->
-            <q-item :inset-level="0.3" dense to="/evento/egyptian-museum" clickable class="menu-item" active-class="menu-active" v-close-popup>
-              <q-item-section avatar>
-                <q-icon name="museum" color="cyan-4" />
-              </q-item-section>
               <q-item-section>
-                <q-item-label class="text-white">Egyptian Museum</q-item-label>
+                <q-item-label class="text-white">{{ ev.nombre }}</q-item-label>
+<!--                <q-item-label caption class="text-grey-3">-->
+<!--                  {{ ev.categoria || 'evento' }}-->
+<!--                </q-item-label>-->
               </q-item-section>
-            </q-item>
 
-            <!-- Sharm El Sheikh Museum -->
-            <q-item :inset-level="0.3" dense to="/evento/sharm-el-sheikh-museum" clickable class="menu-item" active-class="menu-active" v-close-popup>
-              <q-item-section avatar>
-                <q-icon name="beach_access" color="light-blue-4" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="text-white">Sharm El Sheikh Museum</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <!-- Hurghada Museum -->
-            <q-item :inset-level="0.3" dense to="/evento/hurghada-museum" clickable class="menu-item" active-class="menu-active" v-close-popup>
-              <q-item-section avatar>
-                <q-icon name="beach_access" color="teal-4" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="text-white">Hurghada Museum</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <!-- Luxor Temple -->
-            <q-item :inset-level="0.3" dense to="/evento/luxor-temple" clickable class="menu-item" active-class="menu-active" v-close-popup>
-              <q-item-section avatar>
-                <q-icon name="account_balance" color="orange-4" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="text-white">Luxor Temple</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <!-- Karnak Temple -->
-            <q-item :inset-level="0.3" dense to="/evento/karnak-temple" clickable class="menu-item" active-class="menu-active" v-close-popup>
-              <q-item-section avatar>
-                <q-icon name="account_balance" color="deep-orange-4" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="text-white">Karnak Temple</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <!-- Hatshepsut Temple -->
-            <q-item :inset-level="0.3" dense to="/evento/hatshepsut-temple" clickable class="menu-item" active-class="menu-active" v-close-popup>
-              <q-item-section avatar>
-                <q-icon name="account_balance" color="brown-4" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="text-white">Hatshepsut Temple</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <!-- Abu Simbel -->
-            <q-item :inset-level="0.3" dense to="/evento/abu-simbel-temple" clickable class="menu-item" active-class="menu-active" v-close-popup>
-              <q-item-section avatar>
-                <q-icon name="temple_buddhist" color="amber-6" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="text-white">Abu Simbel</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <!-- Coptic Museum -->
-            <q-item :inset-level="0.3" dense to="/evento/coptic-museum" clickable class="menu-item" active-class="menu-active" v-close-popup>
-              <q-item-section avatar>
-                <q-icon name="church" color="purple-4" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="text-white">Coptic Museum</q-item-label>
-              </q-item-section>
+<!--              <q-item-section side>-->
+<!--                <q-badge :color="ev.activo ? 'positive' : 'grey-6'" outline>-->
+<!--                  {{ ev.activo ? 'Activo' : 'Inactivo' }}-->
+<!--                </q-badge>-->
+<!--              </q-item-section>-->
             </q-item>
           </q-list>
         </q-expansion-item>
 
-
-        <!-- IDIOMAS -->
-<!--        <q-item-->
-<!--          dense-->
-<!--          to="/idiomas"-->
-<!--          exact-->
-<!--          clickable-->
-<!--          class="menu-item"-->
-<!--          active-class="menu-active"-->
-<!--          v-close-popup-->
-<!--          v-if="hasPermission('Idiomas')"-->
-<!--        >-->
-<!--          <q-item-section avatar>-->
-<!--            <q-icon name="translate" class="text-white" />-->
-<!--          </q-item-section>-->
-<!--          <q-item-section>-->
-<!--            <q-item-label class="text-white">Idiomas</q-item-label>-->
-<!--          </q-item-section>-->
-<!--        </q-item>-->
-
-<!--        &lt;!&ndash; PRECIOS &ndash;&gt;-->
-<!--        <q-item-->
-<!--          dense-->
-<!--          to="/precios"-->
-<!--          exact-->
-<!--          clickable-->
-<!--          class="menu-item"-->
-<!--          active-class="menu-active"-->
-<!--          v-close-popup-->
-<!--          v-if="hasPermission('Precios')"-->
-<!--        >-->
-<!--          <q-item-section avatar>-->
-<!--            <q-icon name="payments" class="text-white" />-->
-<!--          </q-item-section>-->
-<!--          <q-item-section>-->
-<!--            <q-item-label class="text-white">Precios</q-item-label>-->
-<!--          </q-item-section>-->
-<!--        </q-item>-->
-
-<!--        &lt;!&ndash; REPORTES &ndash;&gt;-->
-<!--        <q-item-->
-<!--          dense-->
-<!--          to="/reportes"-->
-<!--          exact-->
-<!--          clickable-->
-<!--          class="menu-item"-->
-<!--          active-class="menu-active"-->
-<!--          v-close-popup-->
-<!--          v-if="hasPermission('Reportes')"-->
-<!--        >-->
-<!--          <q-item-section avatar>-->
-<!--            <q-icon name="bar_chart" class="text-white" />-->
-<!--          </q-item-section>-->
-<!--          <q-item-section>-->
-<!--            <q-item-label class="text-white">Reportes</q-item-label>-->
-<!--          </q-item-section>-->
-<!--        </q-item>-->
-<!--        pedidos to-->
+        <!-- PEDIDOS -->
         <q-item
           dense
           to="/pedido"
@@ -379,8 +266,12 @@ export default {
   name: 'MainLayout',
   data () {
     return {
-      leftDrawerOpen: false
+      leftDrawerOpen: false,
+      // menuEventosByPais: []
     }
+  },
+  mounted () {
+    this.fetchMenuEventos()
   },
   computed: {
     roleText () {
@@ -390,6 +281,15 @@ export default {
     }
   },
   methods: {
+    fetchMenuEventos () {
+      this.$axios.get('/eventosMenu')
+        .then(res => {
+          this.$store.menuEventosByPais = res.data.items || []
+        })
+        .catch(() => {
+          this.$store.menuEventosByPais = []
+        })
+    },
     toggleLeftDrawer () {
       this.leftDrawerOpen = !this.leftDrawerOpen
     },

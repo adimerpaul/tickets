@@ -1,520 +1,515 @@
 <template>
-  <q-page class="q-pa-md">
+  <!-- HEADER -->
+  <q-card flat bordered class="q-mb-md">
+    <q-card-section class="row items-center">
+      <div>
+        <div class="text-h6 text-weight-bold">Eventos</div>
+        <div class="text-caption text-grey-7">
+          Gestión de eventos, horarios y tipos de entrada (tickets)
+        </div>
+      </div>
+      <q-space />
+      <q-input v-model="filter" dense outlined debounce="300" label="Buscar..." style="width: 320px">
+        <template v-slot:append><q-icon name="search" /></template>
+      </q-input>
+    </q-card-section>
 
-    <!-- HEADER -->
-    <q-card flat bordered class="q-mb-md">
+    <q-separator />
+
+    <q-card-section class="row items-center q-col-gutter-sm">
+      <div class="col-12 col-md-3">
+        <q-select
+          v-model="filters.activo"
+          dense outlined
+          label="Estado"
+          :options="activoOptions"
+          emit-value
+          map-options
+          clearable
+        />
+      </div>
+
+      <div class="col-12 col-md-5">
+        <q-input v-model="filters.search" dense outlined label="Buscar (nombre/slug/ciudad)" debounce="300" />
+      </div>
+
+      <div class="col-12 col-md-4 row justify-end q-gutter-sm">
+        <q-btn color="positive" no-caps icon="add_circle_outline" label="Nuevo evento" :loading="loading" @click="eventoNew" />
+        <q-btn color="primary" no-caps icon="refresh" label="Actualizar" :loading="loading" @click="eventosGet" />
+      </div>
+    </q-card-section>
+  </q-card>
+
+  <!-- TABLA EVENTOS -->
+  <q-table
+    :rows="eventos"
+    :columns="columns"
+    row-key="id"
+    dense
+    flat
+    bordered
+    wrap-cells
+    :filter="filter"
+    :rows-per-page-options="[0]"
+    loading-label="Cargando..."
+    no-data-label="Sin eventos"
+    :loading="loading"
+  >
+    <!--      template acciones-->
+    <template v-slot:body-cell-actions="props">
+      <q-td :props="props" class="text-center">
+        <q-btn-dropdown label="Opciones" no-caps dense color="primary" size="10px">
+          <q-list>
+            <q-item clickable v-close-popup @click="eventoManage(props.row)">
+              <q-item-section avatar><q-icon name="tune" /></q-item-section>
+              <q-item-section><q-item-label>Administrar (horarios/tickets)</q-item-label></q-item-section>
+            </q-item>
+
+            <q-item clickable v-close-popup @click="eventoEdit(props.row)">
+              <q-item-section avatar><q-icon name="edit" /></q-item-section>
+              <q-item-section><q-item-label>Editar</q-item-label></q-item-section>
+            </q-item>
+
+            <q-item clickable v-close-popup @click="toggleActivo(props.row)">
+              <q-item-section avatar>
+                <q-icon :name="props.row.activo ? 'toggle_off' : 'toggle_on'" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ props.row.activo ? 'Desactivar' : 'Activar' }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-separator />
+
+            <q-item clickable v-close-popup @click="eventoDelete(props.row.id)">
+              <q-item-section avatar><q-icon name="delete" /></q-item-section>
+              <q-item-section><q-item-label>Eliminar</q-item-label></q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+      </q-td>
+    </template>
+    <template v-slot:body-cell-activo="props">
+      <q-td :props="props">
+        <q-badge
+          :color="props.row.activo ? 'positive' : 'grey-6'"
+          text-color="white"
+          class="text-weight-bold"
+        >
+          {{ props.row.activo ? 'Activo' : 'Inactivo' }}
+        </q-badge>
+      </q-td>
+    </template>
+
+    <template v-slot:body-cell_regla="props">
+      <q-td :props="props">
+        <q-chip
+          dense
+          :color="colorRegla(props.row.regla_nacionalidad)"
+          text-color="white"
+          size="12px"
+        >
+          {{ labelRegla(props.row.regla_nacionalidad) }}
+        </q-chip>
+      </q-td>
+    </template>
+
+    <template v-slot:body-cell_actions="props">
+      <q-td :props="props" class="text-center">
+        <q-btn-dropdown label="Opciones" no-caps dense color="primary" size="10px">
+          <q-list>
+            <q-item clickable v-close-popup @click="eventoManage(props.row)">
+              <q-item-section avatar><q-icon name="tune" /></q-item-section>
+              <q-item-section><q-item-label>Administrar (horarios/tickets)</q-item-label></q-item-section>
+            </q-item>
+
+            <q-item clickable v-close-popup @click="eventoEdit(props.row)">
+              <q-item-section avatar><q-icon name="edit" /></q-item-section>
+              <q-item-section><q-item-label>Editar</q-item-label></q-item-section>
+            </q-item>
+
+            <q-item clickable v-close-popup @click="toggleActivo(props.row)">
+              <q-item-section avatar>
+                <q-icon :name="props.row.activo ? 'toggle_off' : 'toggle_on'" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ props.row.activo ? 'Desactivar' : 'Activar' }}</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-separator />
+
+            <q-item clickable v-close-popup @click="eventoDelete(props.row.id)">
+              <q-item-section avatar><q-icon name="delete" /></q-item-section>
+              <q-item-section><q-item-label>Eliminar</q-item-label></q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+      </q-td>
+    </template>
+  </q-table>
+
+  <!-- DIALOG: EVENTO (CREAR/EDITAR + ADMIN) -->
+  <q-dialog v-model="eventoDialog" persistent maximized>
+    <q-card class="column">
+
+      <!-- Header dialog -->
       <q-card-section class="row items-center">
         <div>
-          <div class="text-h6 text-weight-bold">Eventos</div>
+          <div class="text-h6 text-weight-bold">
+            {{ evento.id ? 'Evento: ' + evento.nombre : 'Nuevo evento' }}
+          </div>
           <div class="text-caption text-grey-7">
-            Gestión de eventos, horarios y tipos de entrada (tickets)
+            Configura información general, horarios y tickets del evento.
           </div>
         </div>
         <q-space />
-        <q-input v-model="filter" dense outlined debounce="300" label="Buscar..." style="width: 320px">
-          <template v-slot:append><q-icon name="search" /></template>
-        </q-input>
+        <q-btn icon="close" flat round dense @click="closeEventoDialog" />
       </q-card-section>
 
       <q-separator />
 
-      <q-card-section class="row items-center q-col-gutter-sm">
-        <div class="col-12 col-md-3">
-          <q-select
-            v-model="filters.activo"
-            dense outlined
-            label="Estado"
-            :options="activoOptions"
-            emit-value
-            map-options
-            clearable
-          />
-        </div>
-
-        <div class="col-12 col-md-5">
-          <q-input v-model="filters.search" dense outlined label="Buscar (nombre/slug/ciudad)" debounce="300" />
-        </div>
-
-        <div class="col-12 col-md-4 row justify-end q-gutter-sm">
-          <q-btn color="positive" no-caps icon="add_circle_outline" label="Nuevo evento" :loading="loading" @click="eventoNew" />
-          <q-btn color="primary" no-caps icon="refresh" label="Actualizar" :loading="loading" @click="eventosGet" />
-        </div>
+      <!-- Tabs -->
+      <q-card-section class="q-pa-none">
+        <q-tabs v-model="tab" dense active-color="primary" indicator-color="primary" align="left" class="bg-grey-1">
+          <q-tab name="general" icon="info" label="General" />
+          <q-tab name="horarios" icon="schedule" label="Horarios" :disable="!evento.id" />
+          <q-tab name="tickets" icon="confirmation_number" label="Tickets" :disable="!evento.id" />
+        </q-tabs>
       </q-card-section>
+
+      <q-separator />
+
+      <q-card-section class="q-pa-md col">
+
+        <q-tab-panels v-model="tab" animated>
+          <!-- GENERAL -->
+          <q-tab-panel name="general">
+            <div class="row q-col-gutter-md">
+
+              <div class="col-12 col-md-6">
+                <q-input v-model="evento.nombre" dense outlined label="Nombre" :rules="[req]" />
+              </div>
+
+              <div class="col-12 col-md-6">
+                <q-input
+                  v-model="evento.slug"
+                  dense outlined
+                  label="Slug (para /evento/:site)"
+                  hint="Ej: giza-plateau"
+                  :rules="[req]"
+                >
+                  <template v-slot:append>
+                    <q-btn flat dense icon="auto_fix_high" @click="autoSlug" :disable="!evento.nombre" />
+                  </template>
+                </q-input>
+              </div>
+
+              <div class="col-12">
+                <q-input v-model="evento.descripcion" type="textarea" autogrow dense outlined label="Descripción" />
+              </div>
+
+              <div class="col-12 col-md-3">
+                <q-input v-model="evento.pais" dense outlined label="País" />
+              </div>
+
+              <div class="col-12 col-md-3">
+                <q-input v-model="evento.ciudad" dense outlined label="Ciudad" />
+              </div>
+
+              <div class="col-12 col-md-6">
+                <q-input v-model="evento.ubicacion" dense outlined label="Ubicación / Dirección" />
+              </div>
+
+              <div class="col-12 col-md-3">
+                <q-input v-model.number="evento.lat" dense outlined label="Latitud" type="number" />
+              </div>
+
+              <div class="col-12 col-md-3">
+                <q-input v-model.number="evento.lng" dense outlined label="Longitud" type="number" />
+              </div>
+
+              <div class="col-12 col-md-3">
+                <q-input v-model="evento.categoria" dense outlined label="Categoría" hint="museo / templo / site..." />
+              </div>
+
+              <div class="col-12 col-md-3">
+                <q-input v-model.number="evento.orden" dense outlined label="Orden" type="number" />
+              </div>
+
+              <div class="col-12 col-md-3">
+                <q-select
+                  v-model="evento.regla_nacionalidad"
+                  dense outlined
+                  label="Regla de nacionalidad"
+                  :options="reglaOptions"
+                  emit-value
+                  map-options
+                />
+              </div>
+
+              <div class="col-12 col-md-3">
+                <q-input v-model="evento.moneda" dense outlined label="Moneda" />
+              </div>
+
+              <div class="col-12 col-md-6">
+                <q-input v-model="evento.imagen" dense outlined label="Imagen (URL / path)" />
+              </div>
+
+              <div class="col-12 col-md-3">
+                <q-toggle v-model="evento.activo" label="Evento activo" />
+              </div>
+            </div>
+
+            <div class="row justify-end q-gutter-sm q-mt-md">
+              <q-btn color="negative" no-caps flat label="Cancelar" @click="closeEventoDialog" :disable="loading" />
+              <q-btn color="primary" no-caps :label="evento.id ? 'Guardar cambios' : 'Crear evento'" :loading="loading" @click="saveEvento" />
+            </div>
+          </q-tab-panel>
+
+          <!-- HORARIOS -->
+          <q-tab-panel name="horarios">
+            <div class="row items-center q-gutter-sm q-mb-sm">
+              <div class="text-subtitle1 text-weight-bold">Horarios</div>
+              <q-space />
+              <q-btn color="positive" no-caps icon="add_circle_outline" label="Nuevo horario" @click="horarioNew" />
+            </div>
+
+            <q-table
+              :rows="horarios"
+              :columns="columnsHorarios"
+              row-key="id"
+              dense flat bordered
+              :rows-per-page-options="[0]"
+              no-data-label="Sin horarios"
+            >
+              <template v-slot:body-cell_activo="props">
+                <q-td :props="props">
+                  <q-badge :color="props.row.activo ? 'positive' : 'grey-6'" text-color="white">
+                    {{ props.row.activo ? 'Activo' : 'Inactivo' }}
+                  </q-badge>
+                </q-td>
+              </template>
+
+              <template v-slot:body-cell_actions="props">
+                <q-td :props="props" class="text-center">
+                  <q-btn-dropdown no-caps dense size="10px" color="primary" label="Opciones">
+                    <q-list>
+                      <q-item clickable v-close-popup @click="horarioEdit(props.row)">
+                        <q-item-section avatar><q-icon name="edit" /></q-item-section>
+                        <q-item-section><q-item-label>Editar</q-item-label></q-item-section>
+                      </q-item>
+                      <q-item clickable v-close-popup @click="horarioToggle(props.row)">
+                        <q-item-section avatar><q-icon name="toggle_on" /></q-item-section>
+                        <q-item-section><q-item-label>{{ props.row.activo ? 'Desactivar' : 'Activar' }}</q-item-label></q-item-section>
+                      </q-item>
+                      <q-separator />
+                      <q-item clickable v-close-popup @click="horarioDelete(props.row.id)">
+                        <q-item-section avatar><q-icon name="delete" /></q-item-section>
+                        <q-item-section><q-item-label>Eliminar</q-item-label></q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-btn-dropdown>
+                </q-td>
+              </template>
+            </q-table>
+
+            <!-- Dialog Horario -->
+            <q-dialog v-model="horarioDialog" persistent>
+              <q-card style="width: 520px; max-width: 95vw;">
+                <q-card-section class="row items-center q-pb-none">
+                  <div class="text-subtitle1 text-weight-bold">
+                    {{ horario.id ? 'Editar horario' : 'Nuevo horario' }}
+                  </div>
+                  <q-space />
+                  <q-btn icon="close" flat round dense @click="horarioDialog=false" />
+                </q-card-section>
+
+                <q-card-section class="q-pt-sm">
+                  <div class="row q-col-gutter-md">
+
+                    <div class="col-12 col-md-6">
+                      <q-input v-model="horario.fecha" dense outlined label="Fecha (opcional)" type="date" />
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                      <q-input v-model="horario.hora_inicio" dense outlined label="Hora inicio" type="time" />
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                      <q-input v-model="horario.hora_fin" dense outlined label="Hora fin" type="time" />
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                      <q-input v-model="horario.starts_at" dense outlined label="Inicio (datetime opcional)" type="datetime-local" />
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                      <q-input v-model="horario.ends_at" dense outlined label="Fin (datetime opcional)" type="datetime-local" />
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                      <q-input v-model.number="horario.capacidad" dense outlined label="Capacidad" type="number" />
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                      <q-input v-model.number="horario.reservados" dense outlined label="Reservados" type="number" />
+                    </div>
+
+                    <div class="col-12">
+                      <q-input v-model="horario.nota" dense outlined label="Nota" />
+                    </div>
+
+                    <div class="col-12">
+                      <q-toggle v-model="horario.activo" label="Horario activo" />
+                    </div>
+
+                  </div>
+                </q-card-section>
+
+                <q-card-actions align="right">
+                  <q-btn color="negative" no-caps flat label="Cancelar" @click="horarioDialog=false" :disable="loading" />
+                  <q-btn color="primary" no-caps :label="horario.id ? 'Guardar' : 'Crear'" :loading="loading" @click="horarioSave" />
+                </q-card-actions>
+              </q-card>
+            </q-dialog>
+          </q-tab-panel>
+
+          <!-- TICKETS -->
+          <q-tab-panel name="tickets">
+            <div class="row items-center q-gutter-sm q-mb-sm">
+              <div class="text-subtitle1 text-weight-bold">Tickets</div>
+              <q-space />
+              <!--                <q-btn color="positive" no-caps icon="add_circle_outline" label="Nuevo ticket" @click="ticketNew" />-->
+            </div>
+
+            <q-table
+              :rows="tickets"
+              :columns="columnsTickets"
+              row-key="id"
+              dense flat bordered
+              :rows-per-page-options="[0]"
+              no-data-label="Sin tickets"
+            >
+              <template v-slot:body-cell_activo="props">
+                <q-td :props="props">
+                  <q-badge :color="props.row.activo ? 'positive' : 'grey-6'" text-color="white">
+                    {{ props.row.activo ? 'Activo' : 'Inactivo' }}
+                  </q-badge>
+                </q-td>
+              </template>
+
+              <template v-slot:body-cell_regla="props">
+                <q-td :props="props">
+                  <q-chip dense :color="colorRegla(props.row.regla_nacionalidad)" text-color="white" size="12px">
+                    {{ labelRegla(props.row.regla_nacionalidad) }}
+                  </q-chip>
+                </q-td>
+              </template>
+
+              <template v-slot:body-cell_actions="props">
+                <q-td :props="props" class="text-center">
+                  <q-btn-dropdown no-caps dense size="10px" color="primary" label="Opciones">
+                    <q-list>
+                      <q-item clickable v-close-popup @click="ticketEdit(props.row)">
+                        <q-item-section avatar><q-icon name="edit" /></q-item-section>
+                        <q-item-section><q-item-label>Editar</q-item-label></q-item-section>
+                      </q-item>
+                      <q-item clickable v-close-popup @click="ticketToggle(props.row)">
+                        <q-item-section avatar><q-icon name="toggle_on" /></q-item-section>
+                        <q-item-section><q-item-label>{{ props.row.activo ? 'Desactivar' : 'Activar' }}</q-item-label></q-item-section>
+                      </q-item>
+                      <q-separator />
+                      <q-item clickable v-close-popup @click="ticketDelete(props.row.id)">
+                        <q-item-section avatar><q-icon name="delete" /></q-item-section>
+                        <q-item-section><q-item-label>Eliminar</q-item-label></q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-btn-dropdown>
+                </q-td>
+              </template>
+            </q-table>
+
+            <!-- Dialog Ticket -->
+            <q-dialog v-model="ticketDialog" persistent>
+              <q-card style="width: 560px; max-width: 95vw;">
+                <q-card-section class="row items-center q-pb-none">
+                  <div class="text-subtitle1 text-weight-bold">
+                    {{ ticket.id ? 'Editar ticket' : 'Nuevo ticket' }}
+                  </div>
+                  <q-space />
+                  <q-btn icon="close" flat round dense @click="ticketDialog=false" />
+                </q-card-section>
+
+                <q-card-section class="q-pt-sm">
+                  <div class="row q-col-gutter-md">
+                    <div class="col-12 col-md-6">
+                      <q-input v-model="ticket.nombre" dense outlined label="Nombre" :rules="[req]" />
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                      <q-input v-model="ticket.codigo" dense outlined label="Código" hint="GENERAL / VIP / STUDENT" />
+                    </div>
+
+                    <div class="col-12">
+                      <q-input v-model="ticket.descripcion" dense outlined type="textarea" autogrow label="Descripción" />
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                      <q-input v-model.number="ticket.precio" dense outlined label="Precio" type="number" :rules="[req]" />
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                      <q-input v-model="ticket.moneda" dense outlined label="Moneda" />
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                      <q-input v-model.number="ticket.stock" dense outlined label="Stock" type="number" />
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                      <q-input v-model.number="ticket.vendidos" dense outlined label="Vendidos" type="number" />
+                    </div>
+
+                    <div class="col-12 col-md-5">
+                      <q-select
+                        v-model="ticket.regla_nacionalidad"
+                        dense outlined
+                        label="Regla nacionalidad"
+                        :options="reglaOptions"
+                        emit-value
+                        map-options
+                      />
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                      <q-input v-model.number="ticket.orden" dense outlined label="Orden" type="number" />
+                    </div>
+
+                    <div class="col-12">
+                      <q-toggle v-model="ticket.activo" label="Ticket activo" />
+                    </div>
+                  </div>
+                </q-card-section>
+
+                <q-card-actions align="right">
+                  <q-btn color="negative" no-caps flat label="Cancelar" @click="ticketDialog=false" :disable="loading" />
+                  <q-btn color="primary" no-caps :label="ticket.id ? 'Guardar' : 'Crear'" :loading="loading" @click="ticketSave" />
+                </q-card-actions>
+              </q-card>
+            </q-dialog>
+
+          </q-tab-panel>
+        </q-tab-panels>
+      </q-card-section>
+
     </q-card>
-
-    <!-- TABLA EVENTOS -->
-    <q-table
-      :rows="eventos"
-      :columns="columns"
-      row-key="id"
-      dense
-      flat
-      bordered
-      wrap-cells
-      :filter="filter"
-      :rows-per-page-options="[0]"
-      loading-label="Cargando..."
-      no-data-label="Sin eventos"
-      :loading="loading"
-    >
-<!--      template acciones-->
-      <template v-slot:body-cell-actions="props">
-        <q-td :props="props" class="text-center">
-          <q-btn-dropdown label="Opciones" no-caps dense color="primary" size="10px">
-            <q-list>
-              <q-item clickable v-close-popup @click="eventoManage(props.row)">
-                <q-item-section avatar><q-icon name="tune" /></q-item-section>
-                <q-item-section><q-item-label>Administrar (horarios/tickets)</q-item-label></q-item-section>
-              </q-item>
-
-              <q-item clickable v-close-popup @click="eventoEdit(props.row)">
-                <q-item-section avatar><q-icon name="edit" /></q-item-section>
-                <q-item-section><q-item-label>Editar</q-item-label></q-item-section>
-              </q-item>
-
-              <q-item clickable v-close-popup @click="toggleActivo(props.row)">
-                <q-item-section avatar>
-                  <q-icon :name="props.row.activo ? 'toggle_off' : 'toggle_on'" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ props.row.activo ? 'Desactivar' : 'Activar' }}</q-item-label>
-                </q-item-section>
-              </q-item>
-
-              <q-separator />
-
-              <q-item clickable v-close-popup @click="eventoDelete(props.row.id)">
-                <q-item-section avatar><q-icon name="delete" /></q-item-section>
-                <q-item-section><q-item-label>Eliminar</q-item-label></q-item-section>
-              </q-item>
-            </q-list>
-          </q-btn-dropdown>
-        </q-td>
-      </template>
-      <template v-slot:body-cell-activo="props">
-        <q-td :props="props">
-          <q-badge
-            :color="props.row.activo ? 'positive' : 'grey-6'"
-            text-color="white"
-            class="text-weight-bold"
-          >
-            {{ props.row.activo ? 'Activo' : 'Inactivo' }}
-          </q-badge>
-        </q-td>
-      </template>
-
-      <template v-slot:body-cell_regla="props">
-        <q-td :props="props">
-          <q-chip
-            dense
-            :color="colorRegla(props.row.regla_nacionalidad)"
-            text-color="white"
-            size="12px"
-          >
-            {{ labelRegla(props.row.regla_nacionalidad) }}
-          </q-chip>
-        </q-td>
-      </template>
-
-      <template v-slot:body-cell_actions="props">
-        <q-td :props="props" class="text-center">
-          <q-btn-dropdown label="Opciones" no-caps dense color="primary" size="10px">
-            <q-list>
-              <q-item clickable v-close-popup @click="eventoManage(props.row)">
-                <q-item-section avatar><q-icon name="tune" /></q-item-section>
-                <q-item-section><q-item-label>Administrar (horarios/tickets)</q-item-label></q-item-section>
-              </q-item>
-
-              <q-item clickable v-close-popup @click="eventoEdit(props.row)">
-                <q-item-section avatar><q-icon name="edit" /></q-item-section>
-                <q-item-section><q-item-label>Editar</q-item-label></q-item-section>
-              </q-item>
-
-              <q-item clickable v-close-popup @click="toggleActivo(props.row)">
-                <q-item-section avatar>
-                  <q-icon :name="props.row.activo ? 'toggle_off' : 'toggle_on'" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ props.row.activo ? 'Desactivar' : 'Activar' }}</q-item-label>
-                </q-item-section>
-              </q-item>
-
-              <q-separator />
-
-              <q-item clickable v-close-popup @click="eventoDelete(props.row.id)">
-                <q-item-section avatar><q-icon name="delete" /></q-item-section>
-                <q-item-section><q-item-label>Eliminar</q-item-label></q-item-section>
-              </q-item>
-            </q-list>
-          </q-btn-dropdown>
-        </q-td>
-      </template>
-    </q-table>
-
-    <!-- DIALOG: EVENTO (CREAR/EDITAR + ADMIN) -->
-    <q-dialog v-model="eventoDialog" persistent maximized>
-      <q-card class="column">
-
-        <!-- Header dialog -->
-        <q-card-section class="row items-center">
-          <div>
-            <div class="text-h6 text-weight-bold">
-              {{ evento.id ? 'Evento: ' + evento.nombre : 'Nuevo evento' }}
-            </div>
-            <div class="text-caption text-grey-7">
-              Configura información general, horarios y tickets del evento.
-            </div>
-          </div>
-          <q-space />
-          <q-btn icon="close" flat round dense @click="closeEventoDialog" />
-        </q-card-section>
-
-        <q-separator />
-
-        <!-- Tabs -->
-        <q-card-section class="q-pa-none">
-          <q-tabs v-model="tab" dense active-color="primary" indicator-color="primary" align="left" class="bg-grey-1">
-            <q-tab name="general" icon="info" label="General" />
-            <q-tab name="horarios" icon="schedule" label="Horarios" :disable="!evento.id" />
-            <q-tab name="tickets" icon="confirmation_number" label="Tickets" :disable="!evento.id" />
-          </q-tabs>
-        </q-card-section>
-
-        <q-separator />
-
-        <q-card-section class="q-pa-md col">
-
-          <q-tab-panels v-model="tab" animated>
-            <!-- GENERAL -->
-            <q-tab-panel name="general">
-              <div class="row q-col-gutter-md">
-
-                <div class="col-12 col-md-6">
-                  <q-input v-model="evento.nombre" dense outlined label="Nombre" :rules="[req]" />
-                </div>
-
-                <div class="col-12 col-md-6">
-                  <q-input
-                    v-model="evento.slug"
-                    dense outlined
-                    label="Slug (para /evento/:site)"
-                    hint="Ej: giza-plateau"
-                    :rules="[req]"
-                  >
-                    <template v-slot:append>
-                      <q-btn flat dense icon="auto_fix_high" @click="autoSlug" :disable="!evento.nombre" />
-                    </template>
-                  </q-input>
-                </div>
-
-                <div class="col-12">
-                  <q-input v-model="evento.descripcion" type="textarea" autogrow dense outlined label="Descripción" />
-                </div>
-
-                <div class="col-12 col-md-3">
-                  <q-input v-model="evento.pais" dense outlined label="País" />
-                </div>
-
-                <div class="col-12 col-md-3">
-                  <q-input v-model="evento.ciudad" dense outlined label="Ciudad" />
-                </div>
-
-                <div class="col-12 col-md-6">
-                  <q-input v-model="evento.ubicacion" dense outlined label="Ubicación / Dirección" />
-                </div>
-
-                <div class="col-12 col-md-3">
-                  <q-input v-model.number="evento.lat" dense outlined label="Latitud" type="number" />
-                </div>
-
-                <div class="col-12 col-md-3">
-                  <q-input v-model.number="evento.lng" dense outlined label="Longitud" type="number" />
-                </div>
-
-                <div class="col-12 col-md-3">
-                  <q-input v-model="evento.categoria" dense outlined label="Categoría" hint="museo / templo / site..." />
-                </div>
-
-                <div class="col-12 col-md-3">
-                  <q-input v-model.number="evento.orden" dense outlined label="Orden" type="number" />
-                </div>
-
-                <div class="col-12 col-md-3">
-                  <q-select
-                    v-model="evento.regla_nacionalidad"
-                    dense outlined
-                    label="Regla de nacionalidad"
-                    :options="reglaOptions"
-                    emit-value
-                    map-options
-                  />
-                </div>
-
-                <div class="col-12 col-md-3">
-                  <q-input v-model="evento.moneda" dense outlined label="Moneda" />
-                </div>
-
-                <div class="col-12 col-md-6">
-                  <q-input v-model="evento.imagen" dense outlined label="Imagen (URL / path)" />
-                </div>
-
-                <div class="col-12 col-md-3">
-                  <q-toggle v-model="evento.activo" label="Evento activo" />
-                </div>
-              </div>
-
-              <div class="row justify-end q-gutter-sm q-mt-md">
-                <q-btn color="negative" no-caps flat label="Cancelar" @click="closeEventoDialog" :disable="loading" />
-                <q-btn color="primary" no-caps :label="evento.id ? 'Guardar cambios' : 'Crear evento'" :loading="loading" @click="saveEvento" />
-              </div>
-            </q-tab-panel>
-
-            <!-- HORARIOS -->
-            <q-tab-panel name="horarios">
-              <div class="row items-center q-gutter-sm q-mb-sm">
-                <div class="text-subtitle1 text-weight-bold">Horarios</div>
-                <q-space />
-                <q-btn color="positive" no-caps icon="add_circle_outline" label="Nuevo horario" @click="horarioNew" />
-              </div>
-
-              <q-table
-                :rows="horarios"
-                :columns="columnsHorarios"
-                row-key="id"
-                dense flat bordered
-                :rows-per-page-options="[0]"
-                no-data-label="Sin horarios"
-              >
-                <template v-slot:body-cell_activo="props">
-                  <q-td :props="props">
-                    <q-badge :color="props.row.activo ? 'positive' : 'grey-6'" text-color="white">
-                      {{ props.row.activo ? 'Activo' : 'Inactivo' }}
-                    </q-badge>
-                  </q-td>
-                </template>
-
-                <template v-slot:body-cell_actions="props">
-                  <q-td :props="props" class="text-center">
-                    <q-btn-dropdown no-caps dense size="10px" color="primary" label="Opciones">
-                      <q-list>
-                        <q-item clickable v-close-popup @click="horarioEdit(props.row)">
-                          <q-item-section avatar><q-icon name="edit" /></q-item-section>
-                          <q-item-section><q-item-label>Editar</q-item-label></q-item-section>
-                        </q-item>
-                        <q-item clickable v-close-popup @click="horarioToggle(props.row)">
-                          <q-item-section avatar><q-icon name="toggle_on" /></q-item-section>
-                          <q-item-section><q-item-label>{{ props.row.activo ? 'Desactivar' : 'Activar' }}</q-item-label></q-item-section>
-                        </q-item>
-                        <q-separator />
-                        <q-item clickable v-close-popup @click="horarioDelete(props.row.id)">
-                          <q-item-section avatar><q-icon name="delete" /></q-item-section>
-                          <q-item-section><q-item-label>Eliminar</q-item-label></q-item-section>
-                        </q-item>
-                      </q-list>
-                    </q-btn-dropdown>
-                  </q-td>
-                </template>
-              </q-table>
-
-              <!-- Dialog Horario -->
-              <q-dialog v-model="horarioDialog" persistent>
-                <q-card style="width: 520px; max-width: 95vw;">
-                  <q-card-section class="row items-center q-pb-none">
-                    <div class="text-subtitle1 text-weight-bold">
-                      {{ horario.id ? 'Editar horario' : 'Nuevo horario' }}
-                    </div>
-                    <q-space />
-                    <q-btn icon="close" flat round dense @click="horarioDialog=false" />
-                  </q-card-section>
-
-                  <q-card-section class="q-pt-sm">
-                    <div class="row q-col-gutter-md">
-
-                      <div class="col-12 col-md-6">
-                        <q-input v-model="horario.fecha" dense outlined label="Fecha (opcional)" type="date" />
-                      </div>
-
-                      <div class="col-12 col-md-3">
-                        <q-input v-model="horario.hora_inicio" dense outlined label="Hora inicio" type="time" />
-                      </div>
-
-                      <div class="col-12 col-md-3">
-                        <q-input v-model="horario.hora_fin" dense outlined label="Hora fin" type="time" />
-                      </div>
-
-                      <div class="col-12 col-md-6">
-                        <q-input v-model="horario.starts_at" dense outlined label="Inicio (datetime opcional)" type="datetime-local" />
-                      </div>
-
-                      <div class="col-12 col-md-6">
-                        <q-input v-model="horario.ends_at" dense outlined label="Fin (datetime opcional)" type="datetime-local" />
-                      </div>
-
-                      <div class="col-12 col-md-6">
-                        <q-input v-model.number="horario.capacidad" dense outlined label="Capacidad" type="number" />
-                      </div>
-
-                      <div class="col-12 col-md-6">
-                        <q-input v-model.number="horario.reservados" dense outlined label="Reservados" type="number" />
-                      </div>
-
-                      <div class="col-12">
-                        <q-input v-model="horario.nota" dense outlined label="Nota" />
-                      </div>
-
-                      <div class="col-12">
-                        <q-toggle v-model="horario.activo" label="Horario activo" />
-                      </div>
-
-                    </div>
-                  </q-card-section>
-
-                  <q-card-actions align="right">
-                    <q-btn color="negative" no-caps flat label="Cancelar" @click="horarioDialog=false" :disable="loading" />
-                    <q-btn color="primary" no-caps :label="horario.id ? 'Guardar' : 'Crear'" :loading="loading" @click="horarioSave" />
-                  </q-card-actions>
-                </q-card>
-              </q-dialog>
-            </q-tab-panel>
-
-            <!-- TICKETS -->
-            <q-tab-panel name="tickets">
-              <div class="row items-center q-gutter-sm q-mb-sm">
-                <div class="text-subtitle1 text-weight-bold">Tickets</div>
-                <q-space />
-<!--                <q-btn color="positive" no-caps icon="add_circle_outline" label="Nuevo ticket" @click="ticketNew" />-->
-              </div>
-
-              <q-table
-                :rows="tickets"
-                :columns="columnsTickets"
-                row-key="id"
-                dense flat bordered
-                :rows-per-page-options="[0]"
-                no-data-label="Sin tickets"
-              >
-                <template v-slot:body-cell_activo="props">
-                  <q-td :props="props">
-                    <q-badge :color="props.row.activo ? 'positive' : 'grey-6'" text-color="white">
-                      {{ props.row.activo ? 'Activo' : 'Inactivo' }}
-                    </q-badge>
-                  </q-td>
-                </template>
-
-                <template v-slot:body-cell_regla="props">
-                  <q-td :props="props">
-                    <q-chip dense :color="colorRegla(props.row.regla_nacionalidad)" text-color="white" size="12px">
-                      {{ labelRegla(props.row.regla_nacionalidad) }}
-                    </q-chip>
-                  </q-td>
-                </template>
-
-                <template v-slot:body-cell_actions="props">
-                  <q-td :props="props" class="text-center">
-                    <q-btn-dropdown no-caps dense size="10px" color="primary" label="Opciones">
-                      <q-list>
-                        <q-item clickable v-close-popup @click="ticketEdit(props.row)">
-                          <q-item-section avatar><q-icon name="edit" /></q-item-section>
-                          <q-item-section><q-item-label>Editar</q-item-label></q-item-section>
-                        </q-item>
-                        <q-item clickable v-close-popup @click="ticketToggle(props.row)">
-                          <q-item-section avatar><q-icon name="toggle_on" /></q-item-section>
-                          <q-item-section><q-item-label>{{ props.row.activo ? 'Desactivar' : 'Activar' }}</q-item-label></q-item-section>
-                        </q-item>
-                        <q-separator />
-                        <q-item clickable v-close-popup @click="ticketDelete(props.row.id)">
-                          <q-item-section avatar><q-icon name="delete" /></q-item-section>
-                          <q-item-section><q-item-label>Eliminar</q-item-label></q-item-section>
-                        </q-item>
-                      </q-list>
-                    </q-btn-dropdown>
-                  </q-td>
-                </template>
-              </q-table>
-
-              <!-- Dialog Ticket -->
-              <q-dialog v-model="ticketDialog" persistent>
-                <q-card style="width: 560px; max-width: 95vw;">
-                  <q-card-section class="row items-center q-pb-none">
-                    <div class="text-subtitle1 text-weight-bold">
-                      {{ ticket.id ? 'Editar ticket' : 'Nuevo ticket' }}
-                    </div>
-                    <q-space />
-                    <q-btn icon="close" flat round dense @click="ticketDialog=false" />
-                  </q-card-section>
-
-                  <q-card-section class="q-pt-sm">
-                    <div class="row q-col-gutter-md">
-                      <div class="col-12 col-md-6">
-                        <q-input v-model="ticket.nombre" dense outlined label="Nombre" :rules="[req]" />
-                      </div>
-
-                      <div class="col-12 col-md-6">
-                        <q-input v-model="ticket.codigo" dense outlined label="Código" hint="GENERAL / VIP / STUDENT" />
-                      </div>
-
-                      <div class="col-12">
-                        <q-input v-model="ticket.descripcion" dense outlined type="textarea" autogrow label="Descripción" />
-                      </div>
-
-                      <div class="col-12 col-md-4">
-                        <q-input v-model.number="ticket.precio" dense outlined label="Precio" type="number" :rules="[req]" />
-                      </div>
-
-                      <div class="col-12 col-md-4">
-                        <q-input v-model="ticket.moneda" dense outlined label="Moneda" />
-                      </div>
-
-                      <div class="col-12 col-md-4">
-                        <q-input v-model.number="ticket.stock" dense outlined label="Stock" type="number" />
-                      </div>
-
-                      <div class="col-12 col-md-4">
-                        <q-input v-model.number="ticket.vendidos" dense outlined label="Vendidos" type="number" />
-                      </div>
-
-                      <div class="col-12 col-md-5">
-                        <q-select
-                          v-model="ticket.regla_nacionalidad"
-                          dense outlined
-                          label="Regla nacionalidad"
-                          :options="reglaOptions"
-                          emit-value
-                          map-options
-                        />
-                      </div>
-
-                      <div class="col-12 col-md-3">
-                        <q-input v-model.number="ticket.orden" dense outlined label="Orden" type="number" />
-                      </div>
-
-                      <div class="col-12">
-                        <q-toggle v-model="ticket.activo" label="Ticket activo" />
-                      </div>
-                    </div>
-                  </q-card-section>
-
-                  <q-card-actions align="right">
-                    <q-btn color="negative" no-caps flat label="Cancelar" @click="ticketDialog=false" :disable="loading" />
-                    <q-btn color="primary" no-caps :label="ticket.id ? 'Guardar' : 'Crear'" :loading="loading" @click="ticketSave" />
-                  </q-card-actions>
-                </q-card>
-              </q-dialog>
-
-            </q-tab-panel>
-          </q-tab-panels>
-        </q-card-section>
-
-      </q-card>
-    </q-dialog>
-
-  </q-page>
+  </q-dialog>
 </template>
 
 <script>
 export default {
   name: 'EventosPage',
-
   data () {
     return {
       loading: false,
@@ -698,10 +693,16 @@ export default {
         this.tickets = (r.data.tickets || []).map(x => ({ ...x }))
         this.$alert.success(this.evento.id ? 'Evento guardado' : 'Evento creado')
         this.eventosGet()
+        this.updateMenu()
         if (!this.evento.id) this.tab = 'general'
       })
         .catch(e => this.$alert.error(e.response?.data?.message || 'No se pudo guardar'))
         .finally(() => { this.loading = false })
+    },
+    updateMenu () {
+      this.$axios.get('/eventosMenu').then(res => {
+        this.$store.menuEventosByPais = res.data.items || []
+      })
     },
 
     toggleActivo (ev) {
