@@ -10,26 +10,16 @@ class Order extends Model implements AuditableContract
 {
     use AuditableTrait,SoftDeletes;
     protected $fillable = [
-        'session_id',
-        'payment_intent_id',
-        'email',
-        'localizador',
-        'amount_total',
-        'currency',
-        'status',
-        'paid_at',
-        'metadata',
-        'items',
-        'dni',
-        'nombre_completo',
-        'nacionalidad',
-        'entrada_tipo',
-        'codigo_pedido',
+        'codigo_pedido','session_id','email','amount_total','currency','status',
+        'metadata','items','dni','nombre_completo','nacionalidad','entrada_tipo',
+
+        // 👇 nuevos / requeridos
+        'evento_id','starts_at','horario_adulto_id','horario_nino_id','adults','kids',
     ];
 
     protected $casts = [
         'metadata' => 'array',
         'items' => 'array',
-        'paid_at' => 'datetime',
+//        'paid_at' => 'datetime',
     ];
 }

@@ -261,9 +261,10 @@ class EventoController extends Controller
             'activo' => 'nullable|boolean',
             'nota' => 'nullable|string|max:255',
             'plan' => 'nullable|string|max:40',
+            'precio' => 'nullable|numeric|min:0',
         ]);
 
-        $horario->update($request->all());
+        $horario->update($data);
         return $horario;
     }
 
