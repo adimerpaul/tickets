@@ -1,6 +1,7 @@
 <template>
   <q-page class="q-pa-md">
     <orders-page
+      v-if="site"
       :site="site"
       :key="refreshKey"
     />
@@ -12,10 +13,7 @@ import OrdersPage from 'pages/ordenes/Orders.vue'
 
 export default {
   name: 'SiteDetailsPage',
-
-  components: {
-    OrdersPage
-  },
+  components: { OrdersPage },
 
   data () {
     return {
@@ -26,33 +24,21 @@ export default {
   },
 
   mounted () {
-    // valor inicial desde la ruta
+    // inicial (ya viene en la ruta)
     this.site = this.$route.params.site || null
 
-    // watcher de cambio de /evento/:site
     this.unwatchRoute = this.$watch(
       () => this.$route.params.site,
       (newSite, oldSite) => {
         if (newSite === oldSite) return
-
-        // actualizar site
         this.site = newSite || null
-
-        // 🔥 fuerza recreación completa del componente hijo
         this.refreshKey++
       }
     )
   },
 
   beforeUnmount () {
-    if (this.unwatchRoute) {
-      this.unwatchRoute()
-      this.unwatchRoute = null
-    }
+    if (this.unwatchRoute) this.unwatchRoute()
   }
 }
 </script>
-
-<style scoped>
-/* sin estilos extra */
-</style>

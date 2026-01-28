@@ -201,6 +201,7 @@
 
               <q-item-section>
                 <q-item-label class="text-white">{{ ev.nombre }}</q-item-label>
+<!--                <pre>{{ev.slug}}</pre>-->
 <!--                <q-item-label caption class="text-grey-3">-->
 <!--                  {{ ev.categoria || 'evento' }}-->
 <!--                </q-item-label>-->

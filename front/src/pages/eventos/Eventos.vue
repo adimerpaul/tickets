@@ -724,6 +724,7 @@ export default {
             .then(() => {
               this.$alert.success('Evento eliminado')
               this.eventosGet()
+              this.updateMenu()
             })
             .catch(e => this.$alert.error(e.response?.data?.message || 'No se pudo eliminar'))
             .finally(() => { this.loading = false })
