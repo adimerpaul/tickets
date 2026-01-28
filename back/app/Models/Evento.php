@@ -17,11 +17,11 @@ class Evento extends Model implements AuditableContract
         'regla_nacionalidad','moneda'
     ];
 
-//    protected $casts = [
-//        'activo' => 'boolean',
+    protected $casts = [
+        'activo' => 'boolean',
 //        'lat' => 'float',
 //        'lng' => 'float',
-//    ];
+    ];
 
     public function horarios()
     {

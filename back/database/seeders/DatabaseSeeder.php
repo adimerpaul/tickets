@@ -43,6 +43,9 @@ class DatabaseSeeder extends Seeder
             Permission::create(['name' => $permiso]);
         }
         $userAdmin->givePermissionTo(Permission::all());
-        $this->call(EventoSeeder::class);
+        $this->call([
+                EventoSeeder::class,
+                EventoHorarioSeeder::class,
+        ]);
     }
 }

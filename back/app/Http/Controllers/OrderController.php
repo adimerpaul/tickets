@@ -3,10 +3,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Evento;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use function Laravel\Prompts\error;
 
 class OrderController extends Controller
 {
@@ -77,8 +79,16 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
+        $site = $request->input('site');
+
+        $evento = Evento::where('slug', $site)->firstOrFail();
+        if (!$evento) {
+            return response()->json(['message' => 'Evento no encontrado'], 404);
+        }
         // filtros
         $q = Order::query();
+
+        $q->where('evento_id', $evento->id);
 
         // buscar por session_id, email, payment_intent_id
         if ($request->filled('search')) {

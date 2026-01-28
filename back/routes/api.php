@@ -51,4 +51,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/eventos/{evento}/horarios', [EventoController::class, 'horariosStore']);
     Route::put('/evento-horarios/{horario}', [EventoController::class, 'horariosUpdate']);
     Route::delete('/evento-horarios/{horario}', [EventoController::class, 'horariosDestroy']);
+//    eventos/menu
+    Route::get('/eventosMenu', [EventoController::class, 'menu']);
 });

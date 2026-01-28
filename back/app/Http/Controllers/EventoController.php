@@ -4,14 +4,64 @@ namespace App\Http\Controllers;
 
 use App\Models\Evento;
 use App\Models\EventoHorario;
-use App\Models\EventoTicket;
 use Illuminate\Http\Request;
 
 class EventoController extends Controller
 {
-    // LISTAR
+    public function menu(Request $request)
+    {
+        // Si quieres SOLO activos en el menú, pon true.
+        // Si quieres todos (activos/inactivos), pon false o manda ?solo_activos=0
+        $soloActivos = $request->boolean('solo_activos', true);
+
+        $eventos = Evento::query()
+            ->select(['id','nombre','slug','pais','categoria','activo','orden'])
+            ->when($soloActivos, fn($q) => $q->where('activo', true))
+            ->orderBy('pais')      // primero por país
+            ->orderBy('orden')     // luego por orden
+            ->orderBy('id')        // luego por id
+            ->get();
+
+        $iconByCategoria = function (?string $cat): array {
+            $c = strtolower($cat ?? '');
+            if (str_contains($c, 'museum')) return ['icon' => 'museum', 'color' => 'cyan-4'];
+            if (str_contains($c, 'temple')) return ['icon' => 'account_balance', 'color' => 'orange-4'];
+            if (str_contains($c, 'site'))   return ['icon' => 'landscape', 'color' => 'amber-4'];
+            if (str_contains($c, 'city'))   return ['icon' => 'location_city', 'color' => 'light-blue-4'];
+            return ['icon' => 'event', 'color' => 'grey-4'];
+        };
+
+        // Agrupar por país
+        $grouped = $eventos->groupBy(function ($ev) {
+            return trim($ev->pais ?: 'Sin país');
+        })->map(function ($items, $pais) use ($iconByCategoria) {
+            return [
+                'pais' => $pais,
+                'eventos' => $items->map(function ($ev) use ($iconByCategoria) {
+                    $meta = $iconByCategoria($ev->categoria);
+                    return [
+                        'id' => $ev->id,
+                        'nombre' => $ev->nombre,
+                        'slug' => $ev->slug,
+                        'categoria' => $ev->categoria,
+                        'activo' => (bool) $ev->activo,
+                        'orden' => (int) ($ev->orden ?? 0),
+                        'icon' => $meta['icon'],
+//                        'color' => $meta['color'],
+                    ];
+                })->values(),
+            ];
+        })->values();
+
+        return response()->json([
+            'solo_activos' => $soloActivos,
+            'items' => $grouped
+        ]);
+    }
+
     public function index(Request $request)
     {
+
         $q = Evento::query()
             ->with(['horarios', 'tickets'])
             ->orderBy('orden')
