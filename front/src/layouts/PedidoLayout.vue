@@ -225,49 +225,186 @@
 <!--    email: '',-->
 <!--    nombre_completo: '',-->
     <q-dialog v-model="compraDialog" persistent>
-      <q-card>
-        <q-card-section class="row items-center text-h6">
-<!--&lt;!&ndash;          Por favor completa tus datos para finalizar la compra&ndash;&gt; mas corto-->
-          Completa tus datos para finalizar la compra
-          <q-space />
-          <q-icon name="close" class="cursor-pointer" @click="compraDialog = false" />
-        </q-card-section>
-        <q-form @submit="continueBuy">
-        <q-card-section class="row q-col-gutter-md">
-          <div class="col-12 col-md-6">
-            <label class="text-subtitle2 text-grey-8">Nombre Completo</label>
-            <q-input v-model="nombre_completo" outlined dense :rules="[(val) => !!val || 'El nombre es requerido']" />
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="text-subtitle2 text-grey-8">DNI</label>
-            <q-input v-model="dni" outlined dense :rules="[(val) => !!val || 'El DNI es requerido']" />
-          </div>
-          <div class="col-12 col-md-6">
-            <label class="text-subtitle2 text-grey-8">Correo Electrónico</label>
-            <q-input v-model="email" outlined dense :rules="[
-              (val) => !!val || 'El correo es requerido',
-              (val) => /.+@.+\..+/.test(val) || 'Correo inválido'
-            ]" />
-          </div>
-          <div class="col-12">
-<!--            detalle de la compra-->
-            <div class="text-subtitle2 text-grey-8 q-mt-md">Detalle de la Compra</div>
-            <div class="row q-col-gutter-sm">
-              <div class="col-6">Entradas Adulto ({{ adults }})</div>
-              <div class="col-6 text-right">{{ formatEUR(adults * priceAdult) }}</div>
-              <div class="col-6">Entradas Niño ({{ kids }})</div>
-              <div class="col-6 text-right">{{ formatEUR(kids * priceKid) }}</div>
-              <div class="col-6 text-weight-bold">Total</div>
-              <div class="col-6 text-right text-weight-bold">{{ formatEUR(total) }}</div>
-            </div>
-          </div>
+      <q-card class="checkout-card">
 
+        <!-- HEADER -->
+        <q-card-section class="row items-center q-pb-sm">
+          <div class="text-subtitle1 text-weight-bold">Completa tus datos</div>
+          <q-space />
+          <q-btn icon="close" flat round dense @click="compraDialog = false" />
         </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="Cerrar" color="grey" @click="compraDialog = false" no-caps :loading="loading" />
-          <q-btn unelevated label="Finalizar Compra" type="submit" class="buy-btn" no-caps :loading="loading" />
-        </q-card-actions>
+
+        <q-separator />
+
+        <q-form ref="buyForm" @submit.prevent="continueBuy">
+          <q-card-section class="q-pa-md">
+            <div class="row q-col-gutter-lg">
+
+              <!-- IZQUIERDA: FORM -->
+              <div class="col-12 col-md-7">
+                <div class="text-subtitle2 text-grey-8 q-mb-md">Tu información</div>
+
+                <!-- ADULTOS -->
+                <div class="text-caption text-grey-7 q-mb-sm">Adultos</div>
+
+<!--                <div-->
+<!--                  v-for="(a, idx) in adultosForm"-->
+<!--                  :key="idx"-->
+<!--                  class="q-mb-md"-->
+<!--                >-->
+<!--                  <div class="row items-center q-mb-xs">-->
+<!--                    <div class="text-caption text-grey-7 text-weight-medium">-->
+<!--                      {{ idx + 1 }}-->
+<!--                    </div>-->
+<!--                  </div>-->
+
+<!--                  <div class="row q-col-gutter-sm">-->
+<!--                    <div class="col-12 col-sm-6">-->
+<!--                      <q-input-->
+<!--                        v-model="a.nombre"-->
+<!--                        outlined dense-->
+<!--                        label="Nombre"-->
+<!--                        :rules="[(v)=>!!v || 'Nombre requerido']"-->
+<!--                      />-->
+<!--                    </div>-->
+<!--                    <div class="col-12 col-sm-6">-->
+<!--                      <q-input-->
+<!--                        v-model="a.apellido"-->
+<!--                        outlined dense-->
+<!--                        label="Apellido"-->
+<!--                        :rules="[(v)=>!!v || 'Apellido requerido']"-->
+<!--                      />-->
+<!--                    </div>-->
+<!--                  </div>-->
+<!--                </div>-->
+
+                <q-separator spaced />
+
+                <!-- EMAIL + CONFIRM -->
+                <div class="row q-col-gutter-sm">
+                  <div class="col-12 col-md-6">
+                    <q-input
+                      v-model="email"
+                      outlined dense
+                      label="Correo electrónico"
+                      type="email"
+                      :rules="[
+                    (v)=>!!v || 'El correo es requerido',
+                    (v)=>/.+@.+\..+/.test(v) || 'Correo inválido'
+                  ]"
+                    >
+                      <template #prepend>
+                        <q-icon name="mail" />
+                      </template>
+                    </q-input>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <q-input
+                      v-model="email_confirm"
+                      outlined dense
+                      label="Confirmar correo electrónico"
+                      type="email"
+                      :rules="[
+                    (v)=>!!v || 'Confirma tu correo',
+                    (v)=>v === email || 'Los correos no coinciden'
+                  ]"
+                    >
+                      <template #prepend>
+                        <q-icon name="mail" />
+                      </template>
+                    </q-input>
+                  </div>
+                </div>
+
+                <!-- TEL -->
+                <div class="q-mt-sm">
+                  <q-input
+                    v-model="phone"
+                    outlined dense
+                    label="Teléfono (Opcional)"
+                  >
+                    <template #prepend>
+                      <q-icon name="call" />
+                    </template>
+                  </q-input>
+                </div>
+
+                <!-- TERMS -->
+                <div class="q-mt-md">
+                  <q-checkbox v-model="accept_terms" dense>
+                    Acepto <span class="text-primary cursor-pointer">Términos y privacidad</span>
+                  </q-checkbox>
+                  <div v-if="termsError" class="text-negative text-caption q-mt-xs">
+                    Debes aceptar los términos para continuar.
+                  </div>
+                </div>
+              </div>
+
+              <!-- DERECHA: RESUMEN -->
+              <div class="col-12 col-md-5">
+                <q-card flat bordered class="summary-card">
+                  <q-card-section>
+                    <div class="text-subtitle2 text-weight-bold">Resumen de entradas</div>
+
+                    <div class="q-mt-md">
+                      <div class="text-caption text-grey-7">Seleccionar fecha</div>
+                      <div class="text-body2">{{ dateLabel || '—' }}</div>
+                    </div>
+
+                    <div class="q-mt-sm">
+                      <div class="text-caption text-grey-7">Hora</div>
+                      <div class="text-body2">{{ time || '—' }}</div>
+                    </div>
+
+                    <q-separator spaced />
+
+                    <div class="row items-center q-mb-sm">
+                      <div class="text-body2">Adultos</div>
+                      <q-space />
+                      <div class="text-body2">{{ adults }}</div>
+                    </div>
+
+                    <div class="row items-center q-mb-sm">
+                      <div class="text-body2">Niños</div>
+                      <q-space />
+                      <div class="text-body2">{{ kids }}</div>
+                    </div>
+
+                    <q-separator spaced />
+
+                    <div class="row items-center">
+                      <div class="text-body1 text-weight-bold">Total:</div>
+                      <q-space />
+                      <div class="text-body1 text-weight-bold">{{ formatEUR(total) }}</div>
+                    </div>
+
+                    <div class="text-caption text-grey-7 q-mt-xs">
+                      Todas las tasas e impuestos incluidos
+                    </div>
+                  </q-card-section>
+                </q-card>
+              </div>
+
+            </div>
+          </q-card-section>
+
+          <q-separator />
+
+          <!-- FOOTER -->
+          <q-card-actions align="right" class="q-px-md q-py-sm">
+            <q-btn flat no-caps label="Cancelar" color="grey-7" @click="compraDialog = false" :disable="loading" />
+            <q-btn
+              unelevated
+              no-caps
+              class="buy-btn"
+              label="Finalizar compra"
+              type="submit"
+              :loading="loading"
+            />
+          </q-card-actions>
         </q-form>
+
       </q-card>
     </q-dialog>
   </q-layout>
@@ -279,6 +416,11 @@ export default {
   data () {
     return {
       compraDialog: false,
+      accept_terms: false,
+      termsError: false,
+      // adultosForm: Array.from({ length: 1 }, () => ({ nombre: '', apellido: '' })),
+      phone: '',
+      email_confirm: '',
       dni: '',
       email: '',
       nombre_completo: '',
@@ -454,6 +596,23 @@ export default {
 .counter-btn{
   background: #b79a2b;
   color: #fff;
+}
+
+.buy-btn{
+  background: #b79a2b;
+  color: #fff;
+  border-radius: 12px;
+  padding: 10px 16px;
+}
+.checkout-card{
+  width: 980px;
+  max-width: 95vw;
+  border-radius: 14px;
+}
+
+.summary-card{
+  border-radius: 12px;
+  background: #fafafa;
 }
 
 .buy-btn{

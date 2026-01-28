@@ -4,9 +4,7 @@
     <q-card-section class="row items-center">
       <div>
         <div class="text-h6 text-weight-bold">Eventos</div>
-        <div class="text-caption text-grey-7">
-          Gestión de eventos, horarios y tipos de entrada (tickets)
-        </div>
+        <div class="text-caption text-grey-7">Gestión de eventos y horarios</div>
       </div>
       <q-space />
       <q-input v-model="filter" dense outlined debounce="300" label="Buscar..." style="width: 320px">
@@ -35,133 +33,127 @@
 
       <div class="col-12 col-md-4 row justify-end q-gutter-sm">
         <q-btn color="positive" no-caps icon="add_circle_outline" label="Nuevo evento" :loading="loading" @click="eventoNew" />
-        <q-btn color="primary" no-caps icon="refresh" label="Actualizar" :loading="loading" @click="eventosGet" />
+        <q-btn color="primary" no-caps icon="refresh" label="Actualizar" :loading="loading" @click="goEventosPage(1)" />
       </div>
     </q-card-section>
   </q-card>
 
-  <!-- TABLA EVENTOS -->
-  <q-table
-    :rows="eventos"
-    :columns="columns"
-    row-key="id"
-    dense
-    flat
-    bordered
-    wrap-cells
-    :filter="filter"
-    :rows-per-page-options="[0]"
-    loading-label="Cargando..."
-    no-data-label="Sin eventos"
-    :loading="loading"
-  >
-    <!--      template acciones-->
-    <template v-slot:body-cell-actions="props">
-      <q-td :props="props" class="text-center">
-        <q-btn-dropdown label="Opciones" no-caps dense color="primary" size="10px">
-          <q-list>
-            <q-item clickable v-close-popup @click="eventoManage(props.row)">
-              <q-item-section avatar><q-icon name="tune" /></q-item-section>
-              <q-item-section><q-item-label>Administrar (horarios/tickets)</q-item-label></q-item-section>
-            </q-item>
+  <!-- TABLA EVENTOS (PAGINADO) -->
+  <q-card flat bordered>
+    <q-card-section class="row items-center">
+      <div class="text-subtitle1 text-weight-bold">Listado</div>
+      <q-space />
+      <div class="text-caption text-grey-7">
+        Total: {{ eventosTotal }} | Página {{ eventosPage }} / {{ eventosLastPage }}
+      </div>
+    </q-card-section>
 
-            <q-item clickable v-close-popup @click="eventoEdit(props.row)">
-              <q-item-section avatar><q-icon name="edit" /></q-item-section>
-              <q-item-section><q-item-label>Editar</q-item-label></q-item-section>
-            </q-item>
+    <q-separator />
 
-            <q-item clickable v-close-popup @click="toggleActivo(props.row)">
-              <q-item-section avatar>
-                <q-icon :name="props.row.activo ? 'toggle_off' : 'toggle_on'" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>{{ props.row.activo ? 'Desactivar' : 'Activar' }}</q-item-label>
-              </q-item-section>
-            </q-item>
+    <q-card-section class="q-pa-none">
+      <q-table
+        :rows="eventos"
+        :columns="columns"
+        row-key="id"
+        dense
+        flat
+        bordered
+        wrap-cells
+        :filter="filter"
+        :rows-per-page-options="[0]"
+        loading-label="Cargando..."
+        no-data-label="Sin eventos"
+        :loading="loading"
+      >
+        <template v-slot:body-cell-actions="props">
+          <q-td :props="props" class="text-center">
+            <q-btn-dropdown label="Opciones" no-caps dense color="primary" size="10px">
+              <q-list>
+                <q-item clickable v-close-popup @click="eventoManage(props.row)">
+                  <q-item-section avatar><q-icon name="schedule" /></q-item-section>
+                  <q-item-section><q-item-label>Administrar horarios</q-item-label></q-item-section>
+                </q-item>
 
-            <q-separator />
+                <q-item clickable v-close-popup @click="eventoEdit(props.row)">
+                  <q-item-section avatar><q-icon name="edit" /></q-item-section>
+                  <q-item-section><q-item-label>Editar</q-item-label></q-item-section>
+                </q-item>
 
-            <q-item clickable v-close-popup @click="eventoDelete(props.row.id)">
-              <q-item-section avatar><q-icon name="delete" /></q-item-section>
-              <q-item-section><q-item-label>Eliminar</q-item-label></q-item-section>
-            </q-item>
-          </q-list>
-        </q-btn-dropdown>
-      </q-td>
-    </template>
-    <template v-slot:body-cell-activo="props">
-      <q-td :props="props">
-        <q-badge
-          :color="props.row.activo ? 'positive' : 'grey-6'"
-          text-color="white"
-          class="text-weight-bold"
-        >
-          {{ props.row.activo ? 'Activo' : 'Inactivo' }}
-        </q-badge>
-      </q-td>
-    </template>
+                <q-item clickable v-close-popup @click="toggleActivo(props.row)">
+                  <q-item-section avatar>
+                    <q-icon :name="props.row.activo ? 'toggle_off' : 'toggle_on'" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ props.row.activo ? 'Desactivar' : 'Activar' }}</q-item-label>
+                  </q-item-section>
+                </q-item>
 
-    <template v-slot:body-cell_regla="props">
-      <q-td :props="props">
-        <q-chip
-          dense
-          :color="colorRegla(props.row.regla_nacionalidad)"
-          text-color="white"
-          size="12px"
-        >
-          {{ labelRegla(props.row.regla_nacionalidad) }}
-        </q-chip>
-      </q-td>
-    </template>
+                <q-separator />
 
-    <template v-slot:body-cell_actions="props">
-      <q-td :props="props" class="text-center">
-        <q-btn-dropdown label="Opciones" no-caps dense color="primary" size="10px">
-          <q-list>
-            <q-item clickable v-close-popup @click="eventoManage(props.row)">
-              <q-item-section avatar><q-icon name="tune" /></q-item-section>
-              <q-item-section><q-item-label>Administrar (horarios/tickets)</q-item-label></q-item-section>
-            </q-item>
+                <q-item clickable v-close-popup @click="eventoDelete(props.row.id)">
+                  <q-item-section avatar><q-icon name="delete" /></q-item-section>
+                  <q-item-section><q-item-label>Eliminar</q-item-label></q-item-section>
+                </q-item>
+              </q-list>
+            </q-btn-dropdown>
+          </q-td>
+        </template>
 
-            <q-item clickable v-close-popup @click="eventoEdit(props.row)">
-              <q-item-section avatar><q-icon name="edit" /></q-item-section>
-              <q-item-section><q-item-label>Editar</q-item-label></q-item-section>
-            </q-item>
+        <template v-slot:body-cell-activo="props">
+          <q-td :props="props">
+            <q-badge :color="props.row.activo ? 'positive' : 'grey-6'" text-color="white" class="text-weight-bold">
+              {{ props.row.activo ? 'Activo' : 'Inactivo' }}
+            </q-badge>
+          </q-td>
+        </template>
 
-            <q-item clickable v-close-popup @click="toggleActivo(props.row)">
-              <q-item-section avatar>
-                <q-icon :name="props.row.activo ? 'toggle_off' : 'toggle_on'" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>{{ props.row.activo ? 'Desactivar' : 'Activar' }}</q-item-label>
-              </q-item-section>
-            </q-item>
+        <template v-slot:body-cell_regla="props">
+          <q-td :props="props">
+            <q-chip dense :color="colorRegla(props.row.regla_nacionalidad)" text-color="white" size="12px">
+              {{ labelRegla(props.row.regla_nacionalidad) }}
+            </q-chip>
+          </q-td>
+        </template>
+      </q-table>
+    </q-card-section>
 
-            <q-separator />
+    <q-separator />
 
-            <q-item clickable v-close-popup @click="eventoDelete(props.row.id)">
-              <q-item-section avatar><q-icon name="delete" /></q-item-section>
-              <q-item-section><q-item-label>Eliminar</q-item-label></q-item-section>
-            </q-item>
-          </q-list>
-        </q-btn-dropdown>
-      </q-td>
-    </template>
-  </q-table>
+    <q-card-section class="row items-center q-col-gutter-md">
+      <div class="col-12 col-sm-auto">
+        <q-select
+          v-model="eventosPerPage"
+          dense outlined
+          style="width:140px"
+          label="Por página"
+          :options="[25, 50, 100]"
+          @update:model-value="goEventosPage(1)"
+        />
+      </div>
 
-  <!-- DIALOG: EVENTO (CREAR/EDITAR + ADMIN) -->
+      <div class="col-12 col-sm">
+        <q-pagination
+          v-model="eventosPage"
+          :max="eventosLastPage"
+          max-pages="8"
+          boundary-numbers
+          direction-links
+          @update:model-value="goEventosPage"
+        />
+      </div>
+    </q-card-section>
+  </q-card>
+
+  <!-- DIALOG: EVENTO (CREAR/EDITAR + HORARIOS) -->
   <q-dialog v-model="eventoDialog" persistent maximized>
     <q-card class="column">
 
-      <!-- Header dialog -->
       <q-card-section class="row items-center">
         <div>
           <div class="text-h6 text-weight-bold">
             {{ evento.id ? 'Evento: ' + evento.nombre : 'Nuevo evento' }}
           </div>
-          <div class="text-caption text-grey-7">
-            Configura información general, horarios y tickets del evento.
-          </div>
+          <div class="text-caption text-grey-7">Configura información general y horarios.</div>
         </div>
         <q-space />
         <q-btn icon="close" flat round dense @click="closeEventoDialog" />
@@ -169,24 +161,20 @@
 
       <q-separator />
 
-      <!-- Tabs -->
       <q-card-section class="q-pa-none">
         <q-tabs v-model="tab" dense active-color="primary" indicator-color="primary" align="left" class="bg-grey-1">
           <q-tab name="general" icon="info" label="General" />
           <q-tab name="horarios" icon="schedule" label="Horarios" :disable="!evento.id" />
-          <q-tab name="tickets" icon="confirmation_number" label="Tickets" :disable="!evento.id" />
         </q-tabs>
       </q-card-section>
 
       <q-separator />
 
       <q-card-section class="q-pa-md col">
-
-        <q-tab-panels v-model="tab" animated>
+        <q-tab-panels v-model="tab" animated @transition="onTabChanged">
           <!-- GENERAL -->
           <q-tab-panel name="general">
             <div class="row q-col-gutter-md">
-
               <div class="col-12 col-md-6">
                 <q-input v-model="evento.nombre" dense outlined label="Nombre" :rules="[req]" />
               </div>
@@ -230,7 +218,7 @@
               </div>
 
               <div class="col-12 col-md-3">
-                <q-input v-model="evento.categoria" dense outlined label="Categoría" hint="museo / templo / site..." />
+                <q-input v-model="evento.categoria" dense outlined label="Categoría" />
               </div>
 
               <div class="col-12 col-md-3">
@@ -272,7 +260,7 @@
             <div class="row items-center q-gutter-sm q-mb-sm">
               <div class="text-subtitle1 text-weight-bold">Horarios</div>
               <q-space />
-              <q-btn color="positive" no-caps icon="add_circle_outline" label="Nuevo horario" @click="horarioNew" />
+              <q-btn color="primary" no-caps icon="add_circle_outline" label="Crear horarios (lote)" @click="openLoteDialog" />
             </div>
 
             <q-table
@@ -282,16 +270,9 @@
               dense flat bordered
               :rows-per-page-options="[0]"
               no-data-label="Sin horarios"
+              :loading="horariosLoading"
             >
-              <template v-slot:body-cell_activo="props">
-                <q-td :props="props">
-                  <q-badge :color="props.row.activo ? 'positive' : 'grey-6'" text-color="white">
-                    {{ props.row.activo ? 'Activo' : 'Inactivo' }}
-                  </q-badge>
-                </q-td>
-              </template>
-
-              <template v-slot:body-cell_actions="props">
+              <template v-slot:body-cell-actions="props">
                 <q-td :props="props" class="text-center">
                   <q-btn-dropdown no-caps dense size="10px" color="primary" label="Opciones">
                     <q-list>
@@ -299,11 +280,14 @@
                         <q-item-section avatar><q-icon name="edit" /></q-item-section>
                         <q-item-section><q-item-label>Editar</q-item-label></q-item-section>
                       </q-item>
+
                       <q-item clickable v-close-popup @click="horarioToggle(props.row)">
                         <q-item-section avatar><q-icon name="toggle_on" /></q-item-section>
                         <q-item-section><q-item-label>{{ props.row.activo ? 'Desactivar' : 'Activar' }}</q-item-label></q-item-section>
                       </q-item>
+
                       <q-separator />
+
                       <q-item clickable v-close-popup @click="horarioDelete(props.row.id)">
                         <q-item-section avatar><q-icon name="delete" /></q-item-section>
                         <q-item-section><q-item-label>Eliminar</q-item-label></q-item-section>
@@ -312,40 +296,74 @@
                   </q-btn-dropdown>
                 </q-td>
               </template>
+
+              <template v-slot:body-cell-activo="props">
+                <q-td :props="props">
+                  <q-badge :color="props.row.activo ? 'positive' : 'grey-6'" text-color="white">
+                    {{ props.row.activo ? 'Activo' : 'Inactivo' }}
+                  </q-badge>
+                </q-td>
+              </template>
             </q-table>
 
-            <!-- Dialog Horario -->
+            <!-- PAGINACIÓN HORARIOS -->
+            <div class="row items-center q-col-gutter-md q-mt-md">
+              <div class="col-12 col-sm-auto">
+                <q-select
+                  v-model="horariosPerPage"
+                  dense outlined
+                  style="width:140px"
+                  label="Por página"
+                  :options="[25, 50, 100]"
+                  @update:model-value="goHorariosPage(1)"
+                />
+              </div>
+
+              <div class="col-12 col-sm">
+                <q-pagination
+                  v-model="horariosPage"
+                  :max="horariosLastPage"
+                  max-pages="8"
+                  boundary-numbers
+                  direction-links
+                  @update:model-value="goHorariosPage"
+                />
+              </div>
+
+              <div class="col-12 col-sm-auto text-caption text-grey-7">
+                Total: {{ horariosTotal }} | Página {{ horariosPage }} / {{ horariosLastPage }}
+              </div>
+            </div>
+
+            <!-- Dialog Editar Horario -->
             <q-dialog v-model="horarioDialog" persistent>
               <q-card style="width: 520px; max-width: 95vw;">
                 <q-card-section class="row items-center q-pb-none">
-                  <div class="text-subtitle1 text-weight-bold">
-                    {{ horario.id ? 'Editar horario' : 'Nuevo horario' }}
-                  </div>
+                  <div class="text-subtitle1 text-weight-bold">Editar horario</div>
                   <q-space />
                   <q-btn icon="close" flat round dense @click="horarioDialog=false" />
                 </q-card-section>
 
                 <q-card-section class="q-pt-sm">
                   <div class="row q-col-gutter-md">
-
                     <div class="col-12 col-md-6">
-                      <q-input v-model="horario.fecha" dense outlined label="Fecha (opcional)" type="date" />
+                      <q-input v-model="horario.fecha" dense outlined label="Fecha" type="date" />
                     </div>
 
                     <div class="col-12 col-md-3">
-                      <q-input v-model="horario.hora_inicio" dense outlined label="Hora inicio" type="time" />
+                      <q-input v-model="horario.hora_inicio" dense outlined label="Inicio" type="time" />
                     </div>
 
                     <div class="col-12 col-md-3">
-                      <q-input v-model="horario.hora_fin" dense outlined label="Hora fin" type="time" />
+                      <q-input v-model="horario.hora_fin" dense outlined label="Fin" type="time" />
                     </div>
 
                     <div class="col-12 col-md-6">
-                      <q-input v-model="horario.starts_at" dense outlined label="Inicio (datetime opcional)" type="datetime-local" />
+                      <q-input v-model="horario.starts_at" dense outlined label="Starts" type="datetime-local" />
                     </div>
 
                     <div class="col-12 col-md-6">
-                      <q-input v-model="horario.ends_at" dense outlined label="Fin (datetime opcional)" type="datetime-local" />
+                      <q-input v-model="horario.ends_at" dense outlined label="Ends" type="datetime-local" />
                     </div>
 
                     <div class="col-12 col-md-6">
@@ -356,6 +374,21 @@
                       <q-input v-model.number="horario.reservados" dense outlined label="Reservados" type="number" />
                     </div>
 
+                    <div class="col-12 col-md-6">
+<!--                      <q-input v-model="horario.plan" dense outlined label="Plan (opcional)" />-->
+                      <q-select
+                        v-model="horario.plan"
+                        dense outlined
+                        label="Plan"
+                        :options="planes"
+                        clearable
+                      />
+                    </div>
+<!--                    precio-->
+                    <div class="col-12 col-md-6">
+                      <q-input v-model.number="horario.precio" dense outlined label="Precio" type="number" />
+                    </div>
+
                     <div class="col-12">
                       <q-input v-model="horario.nota" dense outlined label="Nota" />
                     </div>
@@ -363,142 +396,84 @@
                     <div class="col-12">
                       <q-toggle v-model="horario.activo" label="Horario activo" />
                     </div>
-
                   </div>
                 </q-card-section>
 
                 <q-card-actions align="right">
                   <q-btn color="negative" no-caps flat label="Cancelar" @click="horarioDialog=false" :disable="loading" />
-                  <q-btn color="primary" no-caps :label="horario.id ? 'Guardar' : 'Crear'" :loading="loading" @click="horarioSave" />
+                  <q-btn color="primary" no-caps label="Guardar" :loading="loading" @click="horarioSave" />
                 </q-card-actions>
               </q-card>
             </q-dialog>
-          </q-tab-panel>
 
-          <!-- TICKETS -->
-          <q-tab-panel name="tickets">
-            <div class="row items-center q-gutter-sm q-mb-sm">
-              <div class="text-subtitle1 text-weight-bold">Tickets</div>
-              <q-space />
-              <!--                <q-btn color="positive" no-caps icon="add_circle_outline" label="Nuevo ticket" @click="ticketNew" />-->
-            </div>
-
-            <q-table
-              :rows="tickets"
-              :columns="columnsTickets"
-              row-key="id"
-              dense flat bordered
-              :rows-per-page-options="[0]"
-              no-data-label="Sin tickets"
-            >
-              <template v-slot:body-cell_activo="props">
-                <q-td :props="props">
-                  <q-badge :color="props.row.activo ? 'positive' : 'grey-6'" text-color="white">
-                    {{ props.row.activo ? 'Activo' : 'Inactivo' }}
-                  </q-badge>
-                </q-td>
-              </template>
-
-              <template v-slot:body-cell_regla="props">
-                <q-td :props="props">
-                  <q-chip dense :color="colorRegla(props.row.regla_nacionalidad)" text-color="white" size="12px">
-                    {{ labelRegla(props.row.regla_nacionalidad) }}
-                  </q-chip>
-                </q-td>
-              </template>
-
-              <template v-slot:body-cell_actions="props">
-                <q-td :props="props" class="text-center">
-                  <q-btn-dropdown no-caps dense size="10px" color="primary" label="Opciones">
-                    <q-list>
-                      <q-item clickable v-close-popup @click="ticketEdit(props.row)">
-                        <q-item-section avatar><q-icon name="edit" /></q-item-section>
-                        <q-item-section><q-item-label>Editar</q-item-label></q-item-section>
-                      </q-item>
-                      <q-item clickable v-close-popup @click="ticketToggle(props.row)">
-                        <q-item-section avatar><q-icon name="toggle_on" /></q-item-section>
-                        <q-item-section><q-item-label>{{ props.row.activo ? 'Desactivar' : 'Activar' }}</q-item-label></q-item-section>
-                      </q-item>
-                      <q-separator />
-                      <q-item clickable v-close-popup @click="ticketDelete(props.row.id)">
-                        <q-item-section avatar><q-icon name="delete" /></q-item-section>
-                        <q-item-section><q-item-label>Eliminar</q-item-label></q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-btn-dropdown>
-                </q-td>
-              </template>
-            </q-table>
-
-            <!-- Dialog Ticket -->
-            <q-dialog v-model="ticketDialog" persistent>
-              <q-card style="width: 560px; max-width: 95vw;">
+            <!-- Dialog Crear Lote -->
+            <q-dialog v-model="loteDialog" persistent>
+              <q-card style="width: 640px; max-width: 95vw;">
                 <q-card-section class="row items-center q-pb-none">
-                  <div class="text-subtitle1 text-weight-bold">
-                    {{ ticket.id ? 'Editar ticket' : 'Nuevo ticket' }}
-                  </div>
+                  <div class="text-subtitle1 text-weight-bold">Crear horarios en lote</div>
                   <q-space />
-                  <q-btn icon="close" flat round dense @click="ticketDialog=false" />
+                  <q-btn icon="close" flat round dense @click="loteDialog=false" />
                 </q-card-section>
 
                 <q-card-section class="q-pt-sm">
                   <div class="row q-col-gutter-md">
                     <div class="col-12 col-md-6">
-                      <q-input v-model="ticket.nombre" dense outlined label="Nombre" :rules="[req]" />
+                      <q-input v-model="lote.fecha_inicio" dense outlined label="Fecha inicio" type="date" />
                     </div>
-
                     <div class="col-12 col-md-6">
-                      <q-input v-model="ticket.codigo" dense outlined label="Código" hint="GENERAL / VIP / STUDENT" />
-                    </div>
-
-                    <div class="col-12">
-                      <q-input v-model="ticket.descripcion" dense outlined type="textarea" autogrow label="Descripción" />
+                      <q-input v-model="lote.fecha_fin" dense outlined label="Fecha fin" type="date" />
                     </div>
 
                     <div class="col-12 col-md-4">
-                      <q-input v-model.number="ticket.precio" dense outlined label="Precio" type="number" :rules="[req]" />
+                      <q-input v-model="lote.hora_inicio" dense outlined label="Hora inicio" type="time" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <q-input v-model="lote.hora_fin" dense outlined label="Hora fin" type="time" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <q-input v-model.number="lote.intervalo_min" dense outlined label="Intervalo (min)" type="number" />
                     </div>
 
                     <div class="col-12 col-md-4">
-                      <q-input v-model="ticket.moneda" dense outlined label="Moneda" />
+                      <q-input v-model.number="lote.capacidad" dense outlined label="Capacidad" type="number" />
                     </div>
 
                     <div class="col-12 col-md-4">
-                      <q-input v-model.number="ticket.stock" dense outlined label="Stock" type="number" />
-                    </div>
-
-                    <div class="col-12 col-md-4">
-                      <q-input v-model.number="ticket.vendidos" dense outlined label="Vendidos" type="number" />
-                    </div>
-
-                    <div class="col-12 col-md-5">
+<!--                      <q-input v-model="lote.plan" dense outlined label="Plan (opcional)" />-->
+<!--                      select adulto ni;os-->
                       <q-select
-                        v-model="ticket.regla_nacionalidad"
+                        v-model="lote.plan"
                         dense outlined
-                        label="Regla nacionalidad"
-                        :options="reglaOptions"
-                        emit-value
-                        map-options
+                        label="Plan"
+                        :options="planes"
+                        clearable
                       />
                     </div>
+<!--                    lote precio-->
+                    <div class="col-12 col-md-4">
+                      <q-input v-model.number="lote.precio" dense outlined label="Precio" type="number" />
+                    </div>
 
-                    <div class="col-12 col-md-3">
-                      <q-input v-model.number="ticket.orden" dense outlined label="Orden" type="number" />
+                    <div class="col-12 col-md-4">
+                      <q-toggle v-model="lote.activo" label="Activo" />
                     </div>
 
                     <div class="col-12">
-                      <q-toggle v-model="ticket.activo" label="Ticket activo" />
+                      <q-input v-model="lote.nota" dense outlined label="Nota (opcional)" />
                     </div>
+                  </div>
+
+                  <div class="text-caption text-grey-7 q-mt-md">
+                    Esto crea automáticamente todos los horarios entre las fechas con el intervalo indicado.
                   </div>
                 </q-card-section>
 
                 <q-card-actions align="right">
-                  <q-btn color="negative" no-caps flat label="Cancelar" @click="ticketDialog=false" :disable="loading" />
-                  <q-btn color="primary" no-caps :label="ticket.id ? 'Guardar' : 'Crear'" :loading="loading" @click="ticketSave" />
+                  <q-btn flat no-caps color="grey-7" label="Cancelar" @click="loteDialog=false" :disable="loading" />
+                  <q-btn color="primary" no-caps label="Crear" :loading="loading" @click="horariosCreateLote" />
                 </q-card-actions>
               </q-card>
             </q-dialog>
-
           </q-tab-panel>
         </q-tab-panels>
       </q-card-section>
@@ -512,14 +487,20 @@ export default {
   name: 'EventosPage',
   data () {
     return {
+      planes: [
+        'Adulto',
+        'Niño',
+      ],
       loading: false,
       filter: '',
-      filters: {
-        activo: null,
-        search: ''
-      },
+      filters: { activo: null, search: '' },
 
+      // eventos paginado
       eventos: [],
+      eventosPage: 1,
+      eventosPerPage: 50,
+      eventosLastPage: 1,
+      eventosTotal: 0,
 
       columns: [
         { name: 'actions', label: 'Acciones', align: 'center' },
@@ -539,40 +520,44 @@ export default {
       evento: {},
       tab: 'general',
 
-      // Horarios
+      // horarios paginado
+      horariosLoading: false,
       horarios: [],
+      horariosPage: 1,
+      horariosPerPage: 50,
+      horariosLastPage: 1,
+      horariosTotal: 0,
+
       columnsHorarios: [
         { name: 'actions', label: 'Acciones', align: 'center' },
         { name: 'id', label: 'ID', align: 'left', field: 'id' },
-        { name: 'fecha', label: 'Fecha', align: 'left', field: 'fecha' },
-        { name: 'hora_inicio', label: 'Inicio', align: 'left', field: 'hora_inicio' },
-        { name: 'hora_fin', label: 'Fin', align: 'left', field: 'hora_fin' },
         { name: 'starts_at', label: 'Starts', align: 'left', field: 'starts_at' },
         { name: 'ends_at', label: 'Ends', align: 'left', field: 'ends_at' },
         { name: 'capacidad', label: 'Capacidad', align: 'left', field: 'capacidad' },
         { name: 'reservados', label: 'Reservados', align: 'left', field: 'reservados' },
+        // precios
+        { name: 'precio', label: 'Precio', align: 'left', field: 'precio' },
+        { name: 'plan', label: 'Plan', align: 'left', field: 'plan' },
         { name: 'activo', label: 'Estado', align: 'left', field: 'activo' }
       ],
+
       horarioDialog: false,
       horario: {},
 
-      // Tickets
-      tickets: [],
-      columnsTickets: [
-        { name: 'actions', label: 'Acciones', align: 'center' },
-        { name: 'id', label: 'ID', align: 'left', field: 'id' },
-        { name: 'nombre', label: 'Nombre', align: 'left', field: 'nombre' },
-        { name: 'codigo', label: 'Código', align: 'left', field: 'codigo' },
-        { name: 'precio', label: 'Precio', align: 'left', field: 'precio' },
-        { name: 'moneda', label: 'Moneda', align: 'left', field: 'moneda' },
-        { name: 'stock', label: 'Stock', align: 'left', field: 'stock' },
-        { name: 'vendidos', label: 'Vendidos', align: 'left', field: 'vendidos' },
-        { name: 'regla', label: 'Nacionalidad', align: 'left', field: 'regla_nacionalidad' },
-        { name: 'activo', label: 'Estado', align: 'left', field: 'activo' },
-        { name: 'orden', label: 'Orden', align: 'left', field: 'orden' }
-      ],
-      ticketDialog: false,
-      ticket: {},
+      // lote
+      loteDialog: false,
+      lote: {
+        fecha_inicio: '',
+        fecha_fin: '',
+        hora_inicio: '09:00',
+        hora_fin: '17:00',
+        intervalo_min: 60,
+        capacidad: 100,
+        activo: true,
+        nota: '',
+        plan: '',
+        precio: 20
+      },
 
       // options
       activoOptions: [
@@ -588,7 +573,12 @@ export default {
   },
 
   mounted () {
-    this.eventosGet()
+    this.goEventosPage(1)
+  },
+
+  watch: {
+    'filters.activo' () { this.goEventosPage(1) },
+    'filters.search' () { this.goEventosPage(1) }
   },
 
   methods: {
@@ -620,16 +610,32 @@ export default {
       this.evento.slug = this.slugify(this.evento.nombre)
     },
 
-    // ===== Eventos =====
-    eventosGet () {
-      this.loading = true
-      const params = {}
-
+    // ========= EVENTOS (PAGINADO) =========
+    buildEventosParams () {
+      const params = {
+        page: this.eventosPage,
+        perPage: this.eventosPerPage
+      }
       if (this.filters.activo !== null && this.filters.activo !== undefined) params.activo = this.filters.activo
       if (this.filters.search) params.search = this.filters.search
+      return params
+    },
 
-      this.$axios.get('eventos', { params })
-        .then(r => { this.eventos = r.data })
+    goEventosPage (p) {
+      this.eventosPage = p
+      this.eventosGet()
+    },
+
+    eventosGet () {
+      this.loading = true
+      this.$axios.get('eventos', { params: this.buildEventosParams() })
+        .then(r => {
+          const data = r.data || {}
+          this.eventos = data.data || []
+          this.eventosPage = data.current_page || 1
+          this.eventosLastPage = data.last_page || 1
+          this.eventosTotal = data.total || 0
+        })
         .catch(e => this.$alert.error(e.response?.data?.message || 'Error cargando eventos'))
         .finally(() => { this.loading = false })
     },
@@ -651,23 +657,32 @@ export default {
         regla_nacionalidad: 'ALL',
         moneda: 'EGP'
       }
-      this.horarios = []
-      this.tickets = []
       this.tab = 'general'
       this.eventoDialog = true
+
+      // reset horarios
+      this.horarios = []
+      this.horariosPage = 1
+      this.horariosLastPage = 1
+      this.horariosTotal = 0
     },
 
     eventoEdit (ev) {
       this.evento = { ...ev }
-      this.horarios = (ev.horarios || []).map(x => ({ ...x }))
-      this.tickets = (ev.tickets || []).map(x => ({ ...x }))
       this.tab = 'general'
       this.eventoDialog = true
+
+      // reset horarios (se cargan recién al entrar)
+      this.horarios = []
+      this.horariosPage = 1
+      this.horariosLastPage = 1
+      this.horariosTotal = 0
     },
 
     eventoManage (ev) {
       this.eventoEdit(ev)
       this.tab = 'horarios'
+      this.horariosGet()
     },
 
     closeEventoDialog () {
@@ -689,20 +704,11 @@ export default {
 
       req.then(r => {
         this.evento = r.data
-        this.horarios = (r.data.horarios || []).map(x => ({ ...x }))
-        this.tickets = (r.data.tickets || []).map(x => ({ ...x }))
         this.$alert.success(this.evento.id ? 'Evento guardado' : 'Evento creado')
-        this.eventosGet()
-        this.updateMenu()
-        if (!this.evento.id) this.tab = 'general'
+        this.goEventosPage(1)
       })
         .catch(e => this.$alert.error(e.response?.data?.message || 'No se pudo guardar'))
         .finally(() => { this.loading = false })
-    },
-    updateMenu () {
-      this.$axios.get('/eventosMenu').then(res => {
-        this.$store.menuEventosByPais = res.data.items || []
-      })
     },
 
     toggleActivo (ev) {
@@ -710,7 +716,7 @@ export default {
       this.$axios.put(`eventos/${ev.id}`, { activo: !ev.activo })
         .then(() => {
           this.$alert.success('Estado actualizado')
-          this.eventosGet()
+          this.goEventosPage(1)
         })
         .catch(e => this.$alert.error(e.response?.data?.message || 'No se pudo actualizar'))
         .finally(() => { this.loading = false })
@@ -723,29 +729,75 @@ export default {
           this.$axios.delete(`eventos/${id}`)
             .then(() => {
               this.$alert.success('Evento eliminado')
-              this.eventosGet()
-              this.updateMenu()
+              this.goEventosPage(1)
             })
             .catch(e => this.$alert.error(e.response?.data?.message || 'No se pudo eliminar'))
             .finally(() => { this.loading = false })
         })
     },
 
-    // ===== Horarios =====
-    horarioNew () {
-      this.horario = {
-        id: null,
-        fecha: '',
-        hora_inicio: '',
-        hora_fin: '',
-        starts_at: '',
-        ends_at: '',
-        capacidad: 0,
-        reservados: 0,
-        activo: true,
-        nota: ''
+    // ========= HORARIOS (PAGINADO Y LAZY LOAD) =========
+    onTabChanged () {
+      if (this.tab === 'horarios' && this.evento?.id) {
+        this.horariosGet()
       }
-      this.horarioDialog = true
+    },
+
+    buildHorariosParams () {
+      return {
+        page: this.horariosPage,
+        perPage: this.horariosPerPage
+      }
+    },
+
+    goHorariosPage (p) {
+      this.horariosPage = p
+      this.horariosGet()
+    },
+
+    horariosGet () {
+      if (!this.evento?.id) return
+      this.horariosLoading = true
+
+      this.$axios.get(`eventos/${this.evento.id}/horarios`, { params: this.buildHorariosParams() })
+        .then(r => {
+          const data = r.data || {}
+          this.horarios = data.data || []
+          this.horariosPage = data.current_page || 1
+          this.horariosLastPage = data.last_page || 1
+          this.horariosTotal = data.total || 0
+        })
+        .catch(e => this.$alert.error(e.response?.data?.message || 'Error cargando horarios'))
+        .finally(() => { this.horariosLoading = false })
+    },
+
+    openLoteDialog () {
+      // defaults (si ya eligieron fechas, puedes ponerlas)
+      if (!this.lote.fecha_inicio) this.lote.fecha_inicio = new Date().toISOString().slice(0,10)
+      if (!this.lote.fecha_fin) this.lote.fecha_fin = this.lote.fecha_inicio
+      this.loteDialog = true
+    },
+
+    horariosCreateLote () {
+      if (!this.evento?.id) return
+      if (!this.lote.fecha_inicio || !this.lote.fecha_fin) {
+        this.$alert.error('Selecciona fecha inicio y fecha fin')
+        return
+      }
+      if (!this.lote.hora_inicio || !this.lote.hora_fin) {
+        this.$alert.error('Selecciona hora inicio y hora fin')
+        return
+      }
+
+      this.loading = true
+      this.$axios.post(`eventos/${this.evento.id}/horarios/lote`, { ...this.lote })
+        .then(r => {
+          this.$alert.success(`Horarios creados: ${r.data?.created || 0}`)
+          this.loteDialog = false
+          this.goHorariosPage(1)
+        })
+        .catch(e => this.$alert.error(e.response?.data?.message || 'No se pudo crear horarios'))
+        .finally(() => { this.loading = false })
     },
 
     horarioEdit (h) {
@@ -766,31 +818,15 @@ export default {
     },
 
     horarioSave () {
-      if (!this.evento.id) {
-        this.$alert.error('Primero guarda el evento')
-        return
-      }
-
+      if (!this.horario?.id) return
       this.loading = true
-      const payload = { ...this.horario }
-
-      // Para datetime-local: viene "YYYY-MM-DDTHH:mm"
-      // Laravel lo acepta como string y lo castea, si tu DB es datetime
-      const req = payload.id
-        ? this.$axios.put(`evento-horarios/${payload.id}`, payload)
-        : this.$axios.post(`eventos/${this.evento.id}/horarios`, payload)
-
-      req.then(r => {
-        if (payload.id) {
-          const idx = this.horarios.findIndex(x => x.id === payload.id)
+      this.$axios.put(`evento-horarios/${this.horario.id}`, { ...this.horario })
+        .then(r => {
+          const idx = this.horarios.findIndex(x => x.id === this.horario.id)
           if (idx !== -1) this.horarios.splice(idx, 1, r.data)
-        } else {
-          this.horarios.unshift(r.data)
-        }
-        this.horarioDialog = false
-        this.$alert.success(payload.id ? 'Horario guardado' : 'Horario creado')
-        this.eventosGet()
-      })
+          this.horarioDialog = false
+          this.$alert.success('Horario guardado')
+        })
         .catch(e => this.$alert.error(e.response?.data?.message || 'No se pudo guardar'))
         .finally(() => { this.loading = false })
     },
@@ -801,101 +837,14 @@ export default {
           this.loading = true
           this.$axios.delete(`evento-horarios/${id}`)
             .then(() => {
-              this.horarios = this.horarios.filter(x => x.id !== id)
               this.$alert.success('Horario eliminado')
-              this.eventosGet()
-            })
-            .catch(e => this.$alert.error(e.response?.data?.message || 'No se pudo eliminar'))
-            .finally(() => { this.loading = false })
-        })
-    },
-
-    // ===== Tickets =====
-    ticketNew () {
-      this.ticket = {
-        id: null,
-        nombre: '',
-        codigo: '',
-        descripcion: '',
-        precio: 0,
-        moneda: this.evento.moneda || 'EGP',
-        stock: 0,
-        vendidos: 0,
-        regla_nacionalidad: 'ALL',
-        activo: true,
-        orden: 0
-      }
-      this.ticketDialog = true
-    },
-
-    ticketEdit (t) {
-      this.ticket = { ...t }
-      this.ticketDialog = true
-    },
-
-    ticketToggle (t) {
-      this.loading = true
-      this.$axios.put(`evento-tickets/${t.id}`, { activo: !t.activo })
-        .then(r => {
-          const idx = this.tickets.findIndex(x => x.id === t.id)
-          if (idx !== -1) this.tickets.splice(idx, 1, r.data)
-          this.$alert.success('Ticket actualizado')
-        })
-        .catch(e => this.$alert.error(e.response?.data?.message || 'No se pudo actualizar'))
-        .finally(() => { this.loading = false })
-    },
-
-    ticketSave () {
-      if (!this.evento.id) {
-        this.$alert.error('Primero guarda el evento')
-        return
-      }
-      if (!this.ticket.nombre) {
-        this.$alert.error('Nombre del ticket es requerido')
-        return
-      }
-
-      this.loading = true
-      const payload = { ...this.ticket }
-
-      const req = payload.id
-        ? this.$axios.put(`evento-tickets/${payload.id}`, payload)
-        : this.$axios.post(`eventos/${this.evento.id}/tickets`, payload)
-
-      req.then(r => {
-        if (payload.id) {
-          const idx = this.tickets.findIndex(x => x.id === payload.id)
-          if (idx !== -1) this.tickets.splice(idx, 1, r.data)
-        } else {
-          this.tickets.unshift(r.data)
-        }
-        this.ticketDialog = false
-        this.$alert.success(payload.id ? 'Ticket guardado' : 'Ticket creado')
-        this.eventosGet()
-      })
-        .catch(e => this.$alert.error(e.response?.data?.message || 'No se pudo guardar'))
-        .finally(() => { this.loading = false })
-    },
-
-    ticketDelete (id) {
-      this.$alert.dialog('¿Eliminar ticket?')
-        .onOk(() => {
-          this.loading = true
-          this.$axios.delete(`evento-tickets/${id}`)
-            .then(() => {
-              this.tickets = this.tickets.filter(x => x.id !== id)
-              this.$alert.success('Ticket eliminado')
-              this.eventosGet()
+              // si borraste el último de una página, refresca
+              this.horariosGet()
             })
             .catch(e => this.$alert.error(e.response?.data?.message || 'No se pudo eliminar'))
             .finally(() => { this.loading = false })
         })
     }
-  },
-
-  watch: {
-    'filters.activo' () { this.eventosGet() },
-    'filters.search' () { this.eventosGet() }
   }
 }
 </script>
