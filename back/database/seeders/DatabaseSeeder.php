@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
         $permisos = [
             'Dashboard',
             'Usuarios',
+            'Eventos',
             'Reservas',
             'Idiomas',
             'Precios',
@@ -42,5 +43,6 @@ class DatabaseSeeder extends Seeder
             Permission::create(['name' => $permiso]);
         }
         $userAdmin->givePermissionTo(Permission::all());
+        $this->call(EventoSeeder::class);
     }
 }

@@ -18,6 +18,8 @@ return new class extends Migration {
             // Cliente
             $table->string('email')->nullable();
             $table->string('localizador')->nullable();
+//            orders
+            $table->integer('orden')->default(0);
 
             // Totales (en centavos)
             $table->decimal('amount_total', 10, 2)->default(0);
@@ -37,9 +39,9 @@ return new class extends Migration {
 //            nacionalidada entrada
             $table->string('nacionalidad')->nullable();
             $table->string('entrada_tipo')->nullable();
-
-            $table->softDeletes();
+            $table->foreignId('evento_id')->constrained('eventos')->cascadeOnDelete();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

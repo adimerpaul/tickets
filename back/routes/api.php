@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\OrderController;
-
+use App\Http\Controllers\EventoController;
 
 Route::post('/stripe/checkout', [StripeController::class, 'checkout']);
 Route::post('/stripe/webhook', [StripeController::class, 'webhook']);
@@ -37,4 +37,18 @@ Route::middleware('auth:sanctum')->group(function () {
 //    await this.$axios.post(`orders/${o.id}/sendEmail`)
     Route::post('/orders/{order}/sendEmail', [OrderController::class, 'sendEmailWithEntradasPdf']);
     Route::get('/orders-pdf', [OrderController::class, 'pdfList']); // pdf del listado filtrado
+
+    Route::get('/eventos', [EventoController::class, 'index']);
+    Route::post('/eventos', [EventoController::class, 'store']);
+    Route::get('/eventos/{evento}', [EventoController::class, 'show']);
+    Route::put('/eventos/{evento}', [EventoController::class, 'update']);
+    Route::delete('/eventos/{evento}', [EventoController::class, 'destroy']);
+
+// Para el frontend /evento/:site
+    Route::get('/eventos-slug/{slug}', [EventoController::class, 'showBySlug']);
+
+// Horarios (1 a N)
+    Route::post('/eventos/{evento}/horarios', [EventoController::class, 'horariosStore']);
+    Route::put('/evento-horarios/{horario}', [EventoController::class, 'horariosUpdate']);
+    Route::delete('/evento-horarios/{horario}', [EventoController::class, 'horariosDestroy']);
 });
