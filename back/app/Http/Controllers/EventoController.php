@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Evento;
 use App\Models\EventoHorario;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class EventoController extends Controller
@@ -58,14 +59,17 @@ class EventoController extends Controller
             'items' => $grouped
         ]);
     }
-
+    // =======================
+    // EVENTOS (PAGINADO)
+    // =======================
     public function index(Request $request)
     {
+        $perPage = (int) $request->input('perPage', 50);
+        $perPage = $perPage > 0 ? min($perPage, 200) : 50;
 
         $q = Evento::query()
-            ->with(['horarios', 'tickets'])
             ->orderBy('orden')
-            ->orderBy('id', 'desc');
+            ->orderByDesc('id');
 
         if ($request->has('activo')) {
             $q->where('activo', $request->boolean('activo'));
@@ -80,24 +84,21 @@ class EventoController extends Controller
             });
         }
 
-        return $q->get();
+        return $q->paginate($perPage);
     }
 
-    // VER POR ID
     public function show(Evento $evento)
     {
-        return $evento->load(['horarios', 'tickets']);
+        return $evento;
     }
 
-    // VER POR SLUG (PARA /evento/:site)
     public function showBySlug($slug)
     {
-        $evento = Evento::where('slug', $slug)->with(['horarios', 'tickets'])->first();
+        $evento = Evento::where('slug', $slug)->first();
         if (!$evento) return response()->json(['message' => 'Evento no encontrado'], 404);
         return $evento;
     }
 
-    // CREAR
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -120,7 +121,6 @@ class EventoController extends Controller
         return Evento::create($data);
     }
 
-    // ACTUALIZAR
     public function update(Request $request, Evento $evento)
     {
         $data = $request->validate([
@@ -141,50 +141,129 @@ class EventoController extends Controller
         ]);
 
         $evento->update($data);
-        return $evento->load(['horarios', 'tickets']);
+        return $evento;
     }
 
-    // ELIMINAR
     public function destroy(Evento $evento)
     {
         $evento->delete();
         return response()->json(['message' => 'Evento eliminado']);
     }
 
-    // ======= HORARIOS =======
-    public function horariosStore(Request $request, Evento $evento)
+    // =======================
+    // HORARIOS (PAGINADO)
+    // =======================
+    public function horariosIndex(Request $request, Evento $evento)
+    {
+        $perPage = (int) $request->input('perPage', 50);
+        $perPage = $perPage > 0 ? min($perPage, 200) : 50;
+
+        $q = EventoHorario::query()
+            ->where('evento_id', $evento->id)
+            ->orderByDesc('starts_at')
+            ->orderByDesc('id');
+
+        if ($request->has('activo')) {
+            $q->where('activo', $request->boolean('activo'));
+        }
+
+        if ($request->filled('from') && $request->filled('to')) {
+            $from = Carbon::parse($request->input('from'))->startOfDay();
+            $to   = Carbon::parse($request->input('to'))->endOfDay();
+            $q->whereBetween('starts_at', [$from, $to]);
+        }
+
+        return $q->paginate($perPage);
+    }
+
+    // =======================
+    // HORARIOS (CREAR EN LOTE)
+    // =======================
+    public function horariosStoreLote(Request $request, Evento $evento)
     {
         $data = $request->validate([
-            'fecha' => 'nullable|date',
-            'hora_inicio' => 'nullable|date_format:H:i',
-            'hora_fin' => 'nullable|date_format:H:i',
-            'starts_at' => 'nullable|date',
-            'ends_at' => 'nullable|date',
-            'capacidad' => 'nullable|integer|min:0',
-            'reservados' => 'nullable|integer|min:0',
-            'activo' => 'nullable|boolean',
-            'nota' => 'nullable|string|max:255',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
+
+            'hora_inicio'  => 'required|date_format:H:i',
+            'hora_fin'     => 'required|date_format:H:i',
+
+            'intervalo_min' => 'required|integer|min:5|max:240',
+
+            'capacidad' => 'required|integer|min:0',
+            'activo'    => 'nullable|boolean',
+            'nota'      => 'nullable|string|max:255',
+
+            // plan (opcional, recomendado que sea enum en DB)
+            'plan'      => 'nullable|string|max:40',
+//            precio
+            'precio'   => 'nullable|numeric|min:0',
         ]);
 
-        $data['evento_id'] = $evento->id;
-        return EventoHorario::create($data);
+        $fechaInicio = Carbon::parse($data['fecha_inicio'])->startOfDay();
+        $fechaFin    = Carbon::parse($data['fecha_fin'])->startOfDay();
+
+        $intervalo = (int) $data['intervalo_min'];
+
+        $activo = array_key_exists('activo', $data) ? (bool)$data['activo'] : true;
+
+        $created = 0;
+
+        for ($day = $fechaInicio->copy(); $day->lte($fechaFin); $day->addDay()) {
+            $start = Carbon::parse($day->format('Y-m-d') . ' ' . $data['hora_inicio']);
+            $end   = Carbon::parse($day->format('Y-m-d') . ' ' . $data['hora_fin']);
+
+            if ($end->lte($start)) {
+                // si el fin es menor/igual al inicio, saltamos ese día
+                continue;
+            }
+
+            while ($start->lt($end)) {
+                $slotEnd = $start->copy()->addMinutes($intervalo);
+                if ($slotEnd->gt($end)) break;
+
+                EventoHorario::create([
+                    'evento_id' => $evento->id,
+                    'fecha' => $day->format('Y-m-d'),
+                    'hora_inicio' => $start->format('H:i'),
+                    'hora_fin' => $slotEnd->format('H:i'),
+                    'starts_at' => $start->format('Y-m-d H:i:s'),
+                    'ends_at' => $slotEnd->format('Y-m-d H:i:s'),
+                    'capacidad' => (int) $data['capacidad'],
+                    'reservados' => 0,
+                    'activo' => $activo,
+                    'nota' => $data['nota'] ?? null,
+                    'plan' => $data['plan'] ?? null,
+                    'precio' => $data['precio'] ?? 0,
+                ]);
+
+                $created++;
+                $start = $slotEnd;
+            }
+        }
+
+        return response()->json([
+            'message' => 'Horarios creados',
+            'created' => $created
+        ]);
     }
 
     public function horariosUpdate(Request $request, EventoHorario $horario)
     {
         $data = $request->validate([
             'fecha' => 'nullable|date',
-            'hora_inicio' => 'nullable|date_format:H:i',
-            'hora_fin' => 'nullable|date_format:H:i',
+//            'hora_inicio' => 'nullable|date_format:H:i',
+//            'hora_fin' => 'nullable|date_format:H:i',
             'starts_at' => 'nullable|date',
             'ends_at' => 'nullable|date',
             'capacidad' => 'nullable|integer|min:0',
             'reservados' => 'nullable|integer|min:0',
             'activo' => 'nullable|boolean',
             'nota' => 'nullable|string|max:255',
+            'plan' => 'nullable|string|max:40',
         ]);
 
-        $horario->update($data);
+        $horario->update($request->all());
         return $horario;
     }
 

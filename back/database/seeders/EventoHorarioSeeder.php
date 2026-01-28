@@ -12,14 +12,14 @@ class EventoHorarioSeeder extends Seeder
     public function run(): void
     {
         // Config: crea horarios para los próximos N días
-        $days = 30;
+        $days = 1;
 
         // Horarios por defecto (puedes ajustar)
         $slots = [
-            ['hora_inicio' => '08:00', 'hora_fin' => '10:00', 'capacidad' => 200],
-            ['hora_inicio' => '10:00', 'hora_fin' => '12:00', 'capacidad' => 200],
-            ['hora_inicio' => '12:00', 'hora_fin' => '14:00', 'capacidad' => 200],
-            ['hora_inicio' => '14:00', 'hora_fin' => '16:00', 'capacidad' => 200],
+            ['hora_inicio' => '08:00', 'hora_fin' => '09:00', 'capacidad' => 200],
+//            ['hora_inicio' => '10:00', 'hora_fin' => '12:00', 'capacidad' => 200],
+//            ['hora_inicio' => '12:00', 'hora_fin' => '14:00', 'capacidad' => 200],
+//            ['hora_inicio' => '14:00', 'hora_fin' => '16:00', 'capacidad' => 200],
         ];
 
         $eventos = Evento::query()->where('activo', true)->get();
@@ -40,6 +40,8 @@ class EventoHorarioSeeder extends Seeder
                             'hora_fin' => $slot['hora_fin'],
                         ],
                         [
+                            'plan' => 'Adulto',
+                            'precio' => 20,
                             'starts_at' => $startsAt,
                             'ends_at' => $endsAt,
                             'capacidad' => $slot['capacidad'],

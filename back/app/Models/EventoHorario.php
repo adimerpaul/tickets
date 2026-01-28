@@ -14,15 +14,15 @@ class EventoHorario extends Model implements AuditableContract
         'fecha','hora_inicio','hora_fin',
         'starts_at','ends_at',
         'capacidad','reservados',
-        'activo','nota'
+        'activo','nota','plan', 'precio',
     ];
 
-//    protected $casts = [
-//        'activo' => 'boolean',
+    protected $casts = [
+        'activo' => 'boolean',
 //        'fecha' => 'date',
 //        'starts_at' => 'datetime',
 //        'ends_at' => 'datetime',
-//    ];
+    ];
 
     public function evento()
     {

@@ -39,16 +39,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders-pdf', [OrderController::class, 'pdfList']); // pdf del listado filtrado
 
     Route::get('/eventos', [EventoController::class, 'index']);
-    Route::post('/eventos', [EventoController::class, 'store']);
     Route::get('/eventos/{evento}', [EventoController::class, 'show']);
+    Route::get('/eventos/slug/{slug}', [EventoController::class, 'showBySlug']);
+
+    Route::post('/eventos', [EventoController::class, 'store']);
     Route::put('/eventos/{evento}', [EventoController::class, 'update']);
     Route::delete('/eventos/{evento}', [EventoController::class, 'destroy']);
 
-// Para el frontend /evento/:site
-    Route::get('/eventos-slug/{slug}', [EventoController::class, 'showBySlug']);
-
-// Horarios (1 a N)
-    Route::post('/eventos/{evento}/horarios', [EventoController::class, 'horariosStore']);
+// horarios (paginado y CRUD)
+    Route::get('/eventos/{evento}/horarios', [EventoController::class, 'horariosIndex']);       // paginado
+    Route::post('/eventos/{evento}/horarios/lote', [EventoController::class, 'horariosStoreLote']); // crear en lote
     Route::put('/evento-horarios/{horario}', [EventoController::class, 'horariosUpdate']);
     Route::delete('/evento-horarios/{horario}', [EventoController::class, 'horariosDestroy']);
 //    eventos/menu
