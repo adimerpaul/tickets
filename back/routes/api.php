@@ -38,19 +38,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/{order}/sendEmail', [OrderController::class, 'sendEmailWithEntradasPdf']);
     Route::get('/orders-pdf', [OrderController::class, 'pdfList']); // pdf del listado filtrado
 
+// eventos
     Route::get('/eventos', [EventoController::class, 'index']);
     Route::get('/eventos/{evento}', [EventoController::class, 'show']);
     Route::get('/eventos/slug/{slug}', [EventoController::class, 'showBySlug']);
-
     Route::post('/eventos', [EventoController::class, 'store']);
     Route::put('/eventos/{evento}', [EventoController::class, 'update']);
     Route::delete('/eventos/{evento}', [EventoController::class, 'destroy']);
 
-// horarios (paginado y CRUD)
-    Route::get('/eventos/{evento}/horarios', [EventoController::class, 'horariosIndex']);       // paginado
-    Route::post('/eventos/{evento}/horarios/lote', [EventoController::class, 'horariosStoreLote']); // crear en lote
+// menu
+    Route::get('/eventosMenu', [EventoController::class, 'menu']);
+
+// ✅ NUEVO: plantilla semanal (grilla)
+    Route::get('/eventos/{evento}/semana', [EventoController::class, 'semanaIndex']);        // ?plan=Adulto
+    Route::put('/eventos/{evento}/semana', [EventoController::class, 'semanaUpsert']);      // guarda grilla
+    Route::post('/eventos/{evento}/generar-slots', [EventoController::class, 'generarSlots']); // regenerar manual
+
+// slots generados (si aún los quieres listar)
+    Route::get('/eventos/{evento}/horarios', [EventoController::class, 'horariosIndex']); // paginado slots reales
     Route::put('/evento-horarios/{horario}', [EventoController::class, 'horariosUpdate']);
     Route::delete('/evento-horarios/{horario}', [EventoController::class, 'horariosDestroy']);
-//    eventos/menu
-    Route::get('/eventosMenu', [EventoController::class, 'menu']);
+
 });

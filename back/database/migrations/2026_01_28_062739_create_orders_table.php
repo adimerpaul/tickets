@@ -11,35 +11,34 @@ return new class extends Migration {
             $table->id();
 
             $table->string('codigo_pedido')->nullable();
+
             // Stripe
-            $table->string('session_id')->unique(); // cs_test_...
+            $table->string('session_id')->unique();
             $table->string('payment_intent_id')->nullable();
 
             // Cliente
             $table->string('email')->nullable();
             $table->string('localizador')->nullable();
-//            orders
             $table->integer('orden')->default(0);
 
-            // Totales (en centavos)
             $table->decimal('amount_total', 10, 2)->default(0);
             $table->string('currency', 10)->default('eur');
 
-            // Estado
-            $table->string('status')->default('PENDING'); // PENDING | PAID | CANCELED | FAILED
+            $table->string('status')->default('PENDING');
             $table->timestamp('paid_at')->nullable();
 
-            // Datos extra (tu metadata y items)
             $table->json('metadata')->nullable();
             $table->json('items')->nullable();
 
             $table->string('dni')->nullable();
             $table->string('nombre_completo')->nullable();
-
-//            nacionalidada entrada
             $table->string('nacionalidad')->nullable();
             $table->string('entrada_tipo')->nullable();
+
+            // slot elegido
             $table->dateTime('starts_at')->nullable();
+
+            // si manejas 2 slots (adulto/niño), mantenemos:
             $table->unsignedBigInteger('horario_adulto_id')->nullable();
             $table->unsignedBigInteger('horario_nino_id')->nullable();
             $table->unsignedInteger('adults')->default(0);
@@ -49,6 +48,8 @@ return new class extends Migration {
 
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index(['evento_id', 'starts_at']);
         });
     }
 

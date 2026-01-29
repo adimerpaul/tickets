@@ -7,33 +7,26 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 
-class EventoHorario extends Model implements AuditableContract
+class EventoSemanaTemplate extends Model implements AuditableContract
 {
     use AuditableTrait, SoftDeletes;
 
+    protected $table = 'evento_semana_templates';
+
     protected $fillable = [
-        'evento_id',
-        'template_id',
-        'fecha','hora_inicio','hora_fin',
-        'starts_at','ends_at',
-        'capacidad','reservados',
-        'activo','nota','plan','precio',
+        'evento_id','dow','hora_inicio','hora_fin',
+        'plan','precio','capacidad','activo'
     ];
 
     protected $casts = [
         'activo' => 'boolean',
+        'dow' => 'integer',
         'precio' => 'float',
         'capacidad' => 'integer',
-        'reservados' => 'integer',
     ];
 
     public function evento()
     {
         return $this->belongsTo(Evento::class, 'evento_id');
-    }
-
-    public function template()
-    {
-        return $this->belongsTo(EventoSemanaTemplate::class, 'template_id');
     }
 }
