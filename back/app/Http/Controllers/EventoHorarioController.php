@@ -115,76 +115,117 @@ class EventoHorarioController extends Controller
     public function generate(Request $request, Evento $evento)
     {
         $data = $request->validate([
-            'date_from' => 'required|date_format:Y-m-d',
-            'date_to'   => 'required|date_format:Y-m-d',
-            'plan'      => 'nullable|string|max:60',
-            'mode'      => 'nullable|in:keep,replace',
+            'date_from'   => 'required|date_format:Y-m-d',
+            'date_to'     => 'required|date_format:Y-m-d',
+            'inicio_hora' => 'required|date_format:H:i',
+            'fin_hora'    => 'required|date_format:H:i',
+            'entre'       => 'required|integer|min:5|max:240',
         ]);
 
         $from = Carbon::createFromFormat('Y-m-d', $data['date_from'])->startOfDay();
         $to   = Carbon::createFromFormat('Y-m-d', $data['date_to'])->endOfDay();
-        $plan = $data['plan'] ?? null;
-        $mode = $data['mode'] ?? 'keep';
 
         if ($to->lt($from)) {
             return response()->json(['message' => 'date_to debe ser mayor o igual a date_from'], 422);
         }
 
-        // Si replace: borramos (hard delete) para evitar choque con unique + softDeletes
-        if ($mode === 'replace') {
-            $del = EventoHorario::withTrashed()
-                ->where('evento_id', $evento->id)
-                ->whereNotNull('starts_at')
-                ->whereBetween('starts_at', [$from, $to]);
-
-            if ($plan !== null && $plan !== '') {
-                $del->where('plan', $plan);
-            }
-
-            $del->forceDelete();
-        }
+        $inicio = $data['inicio_hora']; // H:i
+        $fin    = $data['fin_hora'];    // H:i
+        $step   = (int)$data['entre'];
 
         $created = 0;
         $updated = 0;
 
         DB::beginTransaction();
         try {
-            $cursor = $from->copy()->startOfDay();
-            while ($cursor->lte($to)) {
-                $dow = (int)$cursor->isoWeekday(); // 1..7
-                $daySlots = $this->slotsForDay($evento, $cursor, $dow, $plan);
+            $day = $from->copy()->startOfDay();
 
-                foreach ($daySlots as $slot) {
-                    // starts_at unique por evento + starts_at + plan
+            while ($day->lte($to)) {
+                $start = Carbon::parse($day->format('Y-m-d') . ' ' . $inicio . ':00');
+                $end   = Carbon::parse($day->format('Y-m-d') . ' ' . $fin . ':00');
+
+                if ($end->lte($start)) {
+                    $day->addDay();
+                    continue;
+                }
+
+                $cursor = $start->copy();
+
+                for ($i = 0; $i < 5000; $i++) {
+                    $next = $cursor->copy()->addMinutes($step);
+                    if ($next->gt($end)) break;
+
+                    $fecha = $day->format('Y-m-d');
+                    $horaInicio = $cursor->format('H:i:s');
+                    $horaFin    = $next->format('H:i:s');
+
+                    // ⚠️ BUSCAR EXISTENTE (incluye trashed por si usas soft delete)
+                    $existing = EventoHorario::withTrashed()
+                        ->where('evento_id', $evento->id)
+                        ->where('fecha', $fecha)
+                        ->where('hora_inicio', $horaInicio)
+                        ->where('hora_fin', $horaFin)
+                        ->first();
+
+                    $reservados = $existing ? (int)$existing->reservados : 0;
+
+                    // si estaba soft-deleted, lo revivimos
+                    if ($existing && method_exists($existing, 'restore') && $existing->trashed()) {
+                        $existing->restore();
+                    }
+
+                    // ✅ updateOrCreate sin tocar reservados (lo reponemos)
                     $row = EventoHorario::updateOrCreate(
                         [
-                            'evento_id' => $evento->id,
-                            'starts_at' => $slot['starts_at'],
-                            'plan' => $slot['plan'],
+                            'evento_id'   => $evento->id,
+                            'fecha'       => $fecha,
+                            'hora_inicio' => $horaInicio,
+                            'hora_fin'    => $horaFin,
                         ],
-                        $slot
+                        [
+                            'template_id' => null,
+                            'starts_at'   => $cursor->format('Y-m-d H:i:s'),
+                            'ends_at'     => $next->format('Y-m-d H:i:s'),
+
+                            'plan'        => null,
+
+                            // aquí actualizas lo que quieras que "se regenere"
+                            'precio'      => 0,
+                            'capacidad'   => 100,
+                            'activo'      => true,
+                            'nota'        => null,
+
+                            // ✅ IMPORTANTÍSIMO: conservar reservados
+                            'reservados'  => $reservados,
+                        ]
                     );
 
                     if ($row->wasRecentlyCreated) $created++;
                     else $updated++;
+
+                    $cursor = $next;
+                    if ($cursor->gte($end)) break;
                 }
 
-                $cursor->addDay();
+                $day->addDay();
             }
 
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Error generando slots', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Error generando horarios',
+                'error' => $e->getMessage()
+            ], 500);
         }
 
         return response()->json([
             'message' => 'OK',
             'created' => $created,
             'updated' => $updated,
-            'mode' => $mode,
         ]);
     }
+
 
     /**
      * PUT /api/evento-horarios/{horario}
