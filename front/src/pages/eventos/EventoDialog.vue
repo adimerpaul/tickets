@@ -90,23 +90,23 @@
                 <q-toggle v-model="local.activo" label="Evento activo" />
               </div>
 
-              <div class="col-12">
-                <q-separator spaced />
-                <div class="text-subtitle2 text-weight-bold q-mb-sm">Configuración default de horarios</div>
-              </div>
+<!--              <div class="col-12">-->
+<!--                <q-separator spaced />-->
+<!--                <div class="text-subtitle2 text-weight-bold q-mb-sm">Configuración default de horarios</div>-->
+<!--              </div>-->
 
-              <div class="col-12 col-md-3">
-                <q-input v-model.number="local.slot_interval_min" dense outlined type="number" label="Intervalo (min)" />
-              </div>
-              <div class="col-12 col-md-3">
-                <q-input v-model="local.semana_hora_inicio" dense outlined type="time" label="Hora inicio (default)" />
-              </div>
-              <div class="col-12 col-md-3">
-                <q-input v-model="local.semana_hora_fin" dense outlined type="time" label="Hora fin (default)" />
-              </div>
-              <div class="col-12 col-md-3">
-                <q-input v-model.number="local.generar_semanas" dense outlined type="number" label="Generar semanas" />
-              </div>
+<!--              <div class="col-12 col-md-3">-->
+<!--                <q-input v-model.number="local.slot_interval_min" dense outlined type="number" label="Intervalo (min)" />-->
+<!--              </div>-->
+<!--              <div class="col-12 col-md-3">-->
+<!--                <q-input v-model="local.semana_hora_inicio" dense outlined type="time" label="Hora inicio (default)" />-->
+<!--              </div>-->
+<!--              <div class="col-12 col-md-3">-->
+<!--                <q-input v-model="local.semana_hora_fin" dense outlined type="time" label="Hora fin (default)" />-->
+<!--              </div>-->
+<!--              <div class="col-12 col-md-3">-->
+<!--                <q-input v-model.number="local.generar_semanas" dense outlined type="number" label="Generar semanas" />-->
+<!--              </div>-->
             </div>
 
             <div class="row justify-end q-gutter-sm q-mt-md">
