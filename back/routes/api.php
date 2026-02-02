@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\EventoController;
+use App\Http\Controllers\EventoHorarioController;
 
 Route::post('/stripe/checkout', [StripeController::class, 'checkout']);
 Route::post('/stripe/webhook', [StripeController::class, 'webhook']);
@@ -46,17 +47,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/eventos/{evento}', [EventoController::class, 'update']);
     Route::delete('/eventos/{evento}', [EventoController::class, 'destroy']);
 
-// menu
     Route::get('/eventosMenu', [EventoController::class, 'menu']);
 
-// ✅ NUEVO: plantilla semanal (grilla)
-    Route::get('/eventos/{evento}/semana', [EventoController::class, 'semanaIndex']);        // ?plan=Adulto
-    Route::put('/eventos/{evento}/semana', [EventoController::class, 'semanaUpsert']);      // guarda grilla
-    Route::post('/eventos/{evento}/generar-slots', [EventoController::class, 'generarSlots']); // regenerar manual
 
-// slots generados (si aún los quieres listar)
-    Route::get('/eventos/{evento}/horarios', [EventoController::class, 'horariosIndex']); // paginado slots reales
-    Route::put('/evento-horarios/{horario}', [EventoController::class, 'horariosUpdate']);
-    Route::delete('/evento-horarios/{horario}', [EventoController::class, 'horariosDestroy']);
+    Route::prefix('eventos/{evento}')->group(function () {
+        Route::get('horarios/month', [EventoHorarioController::class, 'month']);   // para pintar calendario
+        Route::get('horarios/day',   [EventoHorarioController::class, 'day']);     // lista lateral del día
+        Route::post('horarios/generate', [EventoHorarioController::class, 'generate']); // generar rango
+    });
+
+    Route::put('evento-horarios/{horario}', [EventoHorarioController::class, 'update']);   // editar slot
+    Route::delete('evento-horarios/{horario}', [EventoHorarioController::class, 'destroy']); // borrar slot
 
 });

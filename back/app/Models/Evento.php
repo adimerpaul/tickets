@@ -27,20 +27,8 @@ class Evento extends Model implements AuditableContract
         'generar_semanas' => 'integer',
     ];
 
-    public function semanaTemplates()
-    {
-        return $this->hasMany(EventoSemanaTemplate::class, 'evento_id')->orderBy('dow')->orderBy('hora_inicio');
-    }
-
     public function horarios()
     {
         return $this->hasMany(EventoHorario::class, 'evento_id')->orderByDesc('starts_at');
-    }
-
-    public function tickets()
-    {
-        return $this->hasMany(\App\Models\Order::class, 'evento_id')
-            ->orderByDesc('paid_at')
-            ->orderByDesc('id');
     }
 }
