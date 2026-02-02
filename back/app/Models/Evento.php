@@ -31,4 +31,21 @@ class Evento extends Model implements AuditableContract
     {
         return $this->hasMany(EventoHorario::class, 'evento_id')->orderByDesc('starts_at');
     }
+    // app/Models/Evento.php
+
+    public function nacionalidades()
+    {
+        return $this->hasMany(\App\Models\EventoNacionalidad::class, 'evento_id')->orderBy('orden');
+    }
+
+    public function tiposEntrada()
+    {
+        return $this->hasMany(\App\Models\EventoTipoEntrada::class, 'evento_id')->orderBy('orden');
+    }
+
+    public function precios()
+    {
+        return $this->hasMany(\App\Models\EventoPrecio::class, 'evento_id');
+    }
+
 }
