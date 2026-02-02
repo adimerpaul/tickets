@@ -18,6 +18,7 @@
         <q-tabs v-model="tab" dense active-color="primary" indicator-color="primary" class="bg-grey-1">
           <q-tab name="general" icon="info" label="General" />
           <q-tab name="horarios" icon="schedule" label="Horarios" :disable="!local.id" />
+          <q-tab name="precios" icon="payments" label="Precios" :disable="!local.id" />
         </q-tabs>
       </q-card-section>
 
@@ -118,6 +119,9 @@
           <q-tab-panel name="horarios">
             <horarios-calendar :evento-id="local.id" />
           </q-tab-panel>
+          <q-tab-panel name="precios">
+            <evento-precios :evento-id="local.id" />
+          </q-tab-panel>
 
         </q-tab-panels>
       </q-card-section>
@@ -127,10 +131,11 @@
 
 <script>
 import HorariosCalendar from './HorariosCalendar.vue'
+import EventoPrecios from './EventoPrecios.vue'
 
 export default {
   name: 'EventoDialog',
-  components: { HorariosCalendar },
+  components: { HorariosCalendar, EventoPrecios },
   props: {
     value: { type: Boolean, default: false },
     evento: { type: Object, default: () => ({}) }
