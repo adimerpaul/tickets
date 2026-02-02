@@ -78,7 +78,7 @@ class EventoPrecioController extends Controller
     {
         $data = $request->validate([
             'nombre' => 'required|string|max:120',
-            'slug'   => 'required|string|max:160',
+            'slug'   => 'nullable|string|max:160',
             'orden'  => 'nullable|integer',
             'activo' => 'nullable|boolean',
             'imagen' => 'nullable|string|max:255',

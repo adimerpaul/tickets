@@ -80,3 +80,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('evento-tipos-entrada/{tipo}', [EventoPrecioController::class, 'tiposDestroy']);
 
 });
+Route::get(
+    'eventos/{evento}/checkout-data',
+    [\App\Http\Controllers\EventoCheckoutController::class, 'checkoutData']
+);
