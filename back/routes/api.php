@@ -107,6 +107,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('precios', [EventoPrecioController::class, 'preciosIndex']);
         Route::post('precios/upsert', [EventoPrecioController::class, 'preciosUpsert']);
     });
+        Route::put('evento-horarios/{horario}', [EventoHorarioController::class, 'update']);   // editar slot
+    Route::delete('evento-horarios/{horario}', [EventoHorarioController::class, 'destroy']); // borrar slot
 
     // updates/deletes directos
     Route::put('evento-nacionalidades/{nac}', [EventoPrecioController::class, 'nacionalidadesUpdate']);
