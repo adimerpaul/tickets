@@ -136,13 +136,25 @@
           <q-card-section class="row items-center">
             <div class="text-subtitle1 text-weight-bold">Matriz de precios</div>
             <q-space />
+            <q-select
+              v-model="selectedMonedaIds"
+              :options="monedas.map(m => ({ label: m.codigo + ' - ' + m.nombre, value: m.id }))"
+              emit-value
+              map-options
+              multiple
+              dense
+              outlined
+              label="Monedas a mostrar"
+              style="min-width: 320px"
+            />
+
             <q-btn
               color="primary"
               no-caps
               icon="save"
               label="Guardar precios"
               :loading="saving"
-              :disable="matrixRows.length === 0"
+              :disable="matrixRows.length === 0 || monedasSel.length === 0"
               @click="savePrices"
             />
           </q-card-section>
@@ -160,12 +172,15 @@
             :rows="matrixRows"
             :columns="colsPrices"
             row-key="key"
-            dense flat bordered
+            dense
+            flat
+            bordered
             :rows-per-page-options="[0]"
             wrap-cells
+            hide-header
           >
             <!-- columnas dinámicas por moneda -->
-            <template v-for="m in monedas" v-slot:[`body-cell-moneda_${m.id}`]="props">
+            <template v-for="m in monedasSel" v-slot:[`body-cell-moneda_${m.id}`]="props">
               <q-td :key="m.id">
                 <div class="row q-col-gutter-xs">
                   <div class="col-6">
@@ -273,6 +288,7 @@ export default {
 
   data () {
     return {
+      selectedMonedaIds: [],
       loading: false,
       saving: false,
 
@@ -316,7 +332,12 @@ export default {
       ]
     }
   },
-
+  computed: {
+    monedasSel () {
+      const set = new Set(this.selectedMonedaIds)
+      return (this.monedas || []).filter(m => set.has(m.id))
+    }
+  },
   mounted () {
     this.loadAll()
   },
@@ -356,6 +377,11 @@ export default {
         this.tipos = rt.data.items || []
         this.segmentos = rs.data.items || []
         this.monedas = rm.data.items || []
+        const dyn = (this.monedasSel || []).map(m => ({
+          name: `moneda_${m.id}`,
+          label: `${m.codigo}`,
+          align: 'left'
+        }))
 
         this.buildColsPrices()
 
@@ -411,7 +437,7 @@ export default {
         const rows = []
 
         for (const r of this.matrixRows) {
-          for (const m of this.monedas) {
+          for (const m of this.monedasSel) {
             const pr = r.prices[m.id]
             rows.push({
               nacionalidad_id: r.nacionalidad_id,
