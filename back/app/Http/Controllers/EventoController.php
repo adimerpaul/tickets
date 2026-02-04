@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Evento;
 use App\Models\EventoHorario;
-use App\Models\EventoSemanaTemplate;
+use App\Models\EventoSegmento;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -94,6 +94,23 @@ class EventoController extends Controller
         return $evento;
     }
 
+    private function crearSegmentosDefault(Evento $evento): void
+    {
+        $defaults = [
+            ['nombre'=>'General','slug'=>'general','orden'=>1,'activo'=>true],
+            ['nombre'=>'Adulto','slug'=>'adulto','orden'=>2,'activo'=>true],
+            ['nombre'=>'Estudiante','slug'=>'estudiante','orden'=>3,'activo'=>true],
+            ['nombre'=>'Niño','slug'=>'nino','orden'=>4,'activo'=>true],
+        ];
+
+        foreach ($defaults as $d) {
+            EventoSegmento::updateOrCreate(
+                ['evento_id'=>$evento->id,'slug'=>$d['slug']],
+                ['nombre'=>$d['nombre'],'orden'=>$d['orden'],'activo'=>$d['activo']]
+            );
+        }
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -130,10 +147,8 @@ class EventoController extends Controller
         return DB::transaction(function () use ($data) {
             $evento = Evento::create($data);
 
-            // ✅ Crear plantilla semanal por defecto
             $this->crearPlantillaDefault($evento);
-
-            // ✅ Generar slots reales por fecha para N semanas
+            $this->crearSegmentosDefault($evento); // ✅ NUEVO
             $this->generarSlotsInterno($evento, Carbon::now(), (int)($evento->generar_semanas ?? 52));
 
             return $evento;

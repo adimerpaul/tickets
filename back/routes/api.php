@@ -7,6 +7,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\EventoHorarioController;
 use App\Http\Controllers\EventoPrecioController;
+use App\Http\Controllers\MonedaController;
 
 Route::post('/stripe/checkout', [StripeController::class, 'checkout']);
 Route::post('/stripe/webhook', [StripeController::class, 'webhook']);
@@ -51,6 +52,40 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/eventosMenu', [EventoController::class, 'menu']);
 
 
+//    Route::prefix('eventos/{evento}')->group(function () {
+//        Route::get('horarios/month', [EventoHorarioController::class, 'month']);   // para pintar calendario
+//        Route::get('horarios/day',   [EventoHorarioController::class, 'day']);     // lista lateral del día
+//        Route::post('horarios/generate', [EventoHorarioController::class, 'generate']); // generar rango
+//
+//        // nacionalidades
+//        Route::get('nacionalidades', [EventoPrecioController::class, 'nacionalidadesIndex']);
+//        Route::post('nacionalidades', [EventoPrecioController::class, 'nacionalidadesStore']);
+//
+//        // tipos entrada
+//        Route::get('tipos-entrada', [EventoPrecioController::class, 'tiposIndex']);
+//        Route::post('tipos-entrada', [EventoPrecioController::class, 'tiposStore']);
+//
+//        // precios
+//        Route::get('precios', [EventoPrecioController::class, 'preciosIndex']);          // ?segmento=ADULTO
+//        Route::post('precios/upsert', [EventoPrecioController::class, 'preciosUpsert']); // bulk
+//    });
+//
+//    Route::put('evento-horarios/{horario}', [EventoHorarioController::class, 'update']);   // editar slot
+//    Route::delete('evento-horarios/{horario}', [EventoHorarioController::class, 'destroy']); // borrar slot
+//
+//    // updates/deletes directos
+//    Route::put('evento-nacionalidades/{nac}', [EventoPrecioController::class, 'nacionalidadesUpdate']);
+//    Route::delete('evento-nacionalidades/{nac}', [EventoPrecioController::class, 'nacionalidadesDestroy']);
+//
+//    Route::put('evento-tipos-entrada/{tipo}', [EventoPrecioController::class, 'tiposUpdate']);
+//    Route::delete('evento-tipos-entrada/{tipo}', [EventoPrecioController::class, 'tiposDestroy']);
+
+    // MONEDAS (global)
+    Route::get('/monedas', [MonedaController::class, 'index']);
+    Route::post('/monedas', [MonedaController::class, 'store']);
+    Route::put('/monedas/{moneda}', [MonedaController::class, 'update']);
+    Route::delete('/monedas/{moneda}', [MonedaController::class, 'destroy']);
+
     Route::prefix('eventos/{evento}')->group(function () {
         Route::get('horarios/month', [EventoHorarioController::class, 'month']);   // para pintar calendario
         Route::get('horarios/day',   [EventoHorarioController::class, 'day']);     // lista lateral del día
@@ -64,13 +99,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('tipos-entrada', [EventoPrecioController::class, 'tiposIndex']);
         Route::post('tipos-entrada', [EventoPrecioController::class, 'tiposStore']);
 
-        // precios
-        Route::get('precios', [EventoPrecioController::class, 'preciosIndex']);          // ?segmento=ADULTO
-        Route::post('precios/upsert', [EventoPrecioController::class, 'preciosUpsert']); // bulk
-    });
+        // segmentos
+        Route::get('segmentos', [EventoPrecioController::class, 'segmentosIndex']);
+        Route::post('segmentos', [EventoPrecioController::class, 'segmentosStore']);
 
-    Route::put('evento-horarios/{horario}', [EventoHorarioController::class, 'update']);   // editar slot
-    Route::delete('evento-horarios/{horario}', [EventoHorarioController::class, 'destroy']); // borrar slot
+        // precios
+        Route::get('precios', [EventoPrecioController::class, 'preciosIndex']);
+        Route::post('precios/upsert', [EventoPrecioController::class, 'preciosUpsert']);
+    });
 
     // updates/deletes directos
     Route::put('evento-nacionalidades/{nac}', [EventoPrecioController::class, 'nacionalidadesUpdate']);
@@ -78,6 +114,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::put('evento-tipos-entrada/{tipo}', [EventoPrecioController::class, 'tiposUpdate']);
     Route::delete('evento-tipos-entrada/{tipo}', [EventoPrecioController::class, 'tiposDestroy']);
+
+    Route::put('evento-segmentos/{seg}', [EventoPrecioController::class, 'segmentosUpdate']);
+    Route::delete('evento-segmentos/{seg}', [EventoPrecioController::class, 'segmentosDestroy']);
 
 });
 Route::get(

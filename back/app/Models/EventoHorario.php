@@ -13,7 +13,7 @@ class EventoHorario extends Model implements AuditableContract
 
     protected $fillable = [
         'evento_id',
-        'template_id',
+//        'template_id',
         'fecha','hora_inicio','hora_fin',
         'starts_at','ends_at',
         'capacidad','reservados',

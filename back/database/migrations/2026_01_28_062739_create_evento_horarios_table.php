@@ -11,15 +11,17 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('evento_id')->constrained('eventos')->cascadeOnDelete();
 
-            // referencia a la plantilla (opcional pero útil)
-            $table->unsignedBigInteger('template_id')->nullable();
+//            $table->foreignId('template_id')
+//                ->nullable()
+//                ->constrained('evento_semana_templates')
+//                ->nullOnDelete();
 
-            // Slot por fecha real (lo que se vende/reserva)
+            // Slot por fecha real
             $table->date('fecha')->nullable();
             $table->time('hora_inicio')->nullable();
             $table->time('hora_fin')->nullable();
 
-            $table->string('plan')->nullable(); // Adulto / Niño
+            $table->string('plan')->nullable();
             $table->decimal('precio', 8, 2)->default(0);
 
             $table->dateTime('starts_at')->nullable();
@@ -37,9 +39,8 @@ return new class extends Migration {
             $table->index(['evento_id', 'starts_at']);
             $table->index(['evento_id', 'fecha']);
             $table->unique(['evento_id', 'starts_at', 'plan'], 'uniq_evento_slot_datetime');
-
-            $table->foreign('template_id')->references('id')->on('evento_semana_templates')->nullOnDelete();
         });
+
     }
 
     public function down(): void

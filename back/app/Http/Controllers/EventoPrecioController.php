@@ -5,21 +5,36 @@ namespace App\Http\Controllers;
 use App\Models\Evento;
 use App\Models\EventoNacionalidad;
 use App\Models\EventoTipoEntrada;
+use App\Models\EventoSegmento;
 use App\Models\EventoPrecio;
+use App\Models\Moneda;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class EventoPrecioController extends Controller
 {
-    // ======================================================
-    // NACIONALIDADES
-    // ======================================================
+    // ==========================
+    // MONEDAS (global)
+    // ==========================
+    public function monedasIndex(Request $request)
+    {
+        $soloActivos = $request->boolean('solo_activos', true);
 
+        $items = Moneda::query()
+            ->when($soloActivos, fn($q) => $q->where('activo', true))
+            ->orderBy('orden')->orderBy('id')
+            ->get();
+
+        return response()->json(['items' => $items]);
+    }
+
+    // ==========================
+    // NACIONALIDADES
+    // ==========================
     public function nacionalidadesIndex(Evento $evento)
     {
         $items = EventoNacionalidad::where('evento_id', $evento->id)
-            ->orderBy('orden')
-            ->orderBy('id')
+            ->orderBy('orden')->orderBy('id')
             ->get();
 
         return response()->json(['items' => $items]);
@@ -60,15 +75,13 @@ class EventoPrecioController extends Controller
         return response()->json(['message' => 'OK']);
     }
 
-    // ======================================================
-    // TIPOS DE ENTRADA
-    // ======================================================
-
+    // ==========================
+    // TIPOS ENTRADA
+    // ==========================
     public function tiposIndex(Evento $evento)
     {
         $items = EventoTipoEntrada::where('evento_id', $evento->id)
-            ->orderBy('orden')
-            ->orderBy('id')
+            ->orderBy('orden')->orderBy('id')
             ->get();
 
         return response()->json(['items' => $items]);
@@ -111,43 +124,68 @@ class EventoPrecioController extends Controller
         return response()->json(['message' => 'OK']);
     }
 
-    // ======================================================
-    // PRECIOS (MATRIZ)
-    // ======================================================
+    // ==========================
+    // SEGMENTOS (General/Adulto/Estudiante/Niño)
+    // ==========================
+    public function segmentosIndex(Evento $evento)
+    {
+        $items = EventoSegmento::where('evento_id', $evento->id)
+            ->orderBy('orden')->orderBy('id')
+            ->get();
 
-    /**
-     * GET /api/eventos/{evento}/precios
-     */
+        return response()->json(['items' => $items]);
+    }
+
+    public function segmentosStore(Request $request, Evento $evento)
+    {
+        $data = $request->validate([
+            'nombre' => 'required|string|max:80',
+            'slug'   => 'required|string|max:120',
+            'orden'  => 'nullable|integer',
+            'activo' => 'nullable|boolean',
+        ]);
+
+        $data['evento_id'] = $evento->id;
+        $data['orden']  = $data['orden'] ?? 0;
+        $data['activo'] = array_key_exists('activo', $data) ? (bool)$data['activo'] : true;
+
+        return EventoSegmento::create($data);
+    }
+
+    public function segmentosUpdate(Request $request, EventoSegmento $seg)
+    {
+        $data = $request->validate([
+            'nombre' => 'sometimes|required|string|max:80',
+            'slug'   => 'sometimes|required|string|max:120',
+            'orden'  => 'nullable|integer',
+            'activo' => 'nullable|boolean',
+        ]);
+
+        $seg->update($data);
+        return $seg;
+    }
+
+    public function segmentosDestroy(EventoSegmento $seg)
+    {
+        $seg->delete();
+        return response()->json(['message' => 'OK']);
+    }
+
+    // ==========================
+    // PRECIOS (Nac x Tipo x Segmento x Moneda)
+    // ==========================
     public function preciosIndex(Evento $evento)
     {
         $items = EventoPrecio::where('evento_id', $evento->id)->get();
-
-        return response()->json([
-            'items' => $items
-        ]);
+        return response()->json(['items' => $items]);
     }
 
     /**
      * POST /api/eventos/{evento}/precios/upsert
-     *
      * Body:
-     * {
-     *   "rows": [
-     *     {
-     *       "nacionalidad_id": 1,
-     *       "tipo_entrada_id": 2,
-     *       "egp_compra": 0,
-     *       "egp_venta": 0,
-     *       "eur_compra": 0,
-     *       "eur_venta": 0,
-     *       "usd_compra": 0,
-     *       "usd_venta": 0,
-     *       "usdt_compra": 0,
-     *       "usdt_venta": 0,
-     *       "activo": true
-     *     }
-     *   ]
-     * }
+     * { "rows": [
+     *   { nacionalidad_id, tipo_entrada_id, segmento_id, moneda_id, compra, venta, activo }
+     * ]}
      */
     public function preciosUpsert(Request $request, Evento $evento)
     {
@@ -156,15 +194,11 @@ class EventoPrecioController extends Controller
 
             'rows.*.nacionalidad_id' => 'required|integer',
             'rows.*.tipo_entrada_id' => 'required|integer',
+            'rows.*.segmento_id'     => 'required|integer',
+            'rows.*.moneda_id'       => 'required|integer',
 
-            'rows.*.egp_compra'  => 'nullable|numeric|min:0',
-            'rows.*.egp_venta'   => 'nullable|numeric|min:0',
-            'rows.*.eur_compra'  => 'nullable|numeric|min:0',
-            'rows.*.eur_venta'   => 'nullable|numeric|min:0',
-            'rows.*.usd_compra'  => 'nullable|numeric|min:0',
-            'rows.*.usd_venta'   => 'nullable|numeric|min:0',
-            'rows.*.usdt_compra' => 'nullable|numeric|min:0',
-            'rows.*.usdt_venta'  => 'nullable|numeric|min:0',
+            'rows.*.compra' => 'nullable|numeric|min:0',
+            'rows.*.venta'  => 'nullable|numeric|min:0',
 
             'rows.*.activo' => 'nullable|boolean',
         ]);
@@ -174,33 +208,24 @@ class EventoPrecioController extends Controller
             $upserted = 0;
 
             foreach ($data['rows'] as $r) {
-
                 EventoPrecio::updateOrCreate(
                     [
                         'evento_id'        => $evento->id,
                         'nacionalidad_id'  => (int)$r['nacionalidad_id'],
                         'tipo_entrada_id'  => (int)$r['tipo_entrada_id'],
+                        'segmento_id'      => (int)$r['segmento_id'],
+                        'moneda_id'        => (int)$r['moneda_id'],
                     ],
                     [
-                        'egp_compra'  => (float)($r['egp_compra']  ?? 0),
-                        'egp_venta'   => (float)($r['egp_venta']   ?? 0),
-                        'eur_compra'  => (float)($r['eur_compra']  ?? 0),
-                        'eur_venta'   => (float)($r['eur_venta']   ?? 0),
-                        'usd_compra'  => (float)($r['usd_compra']  ?? 0),
-                        'usd_venta'   => (float)($r['usd_venta']   ?? 0),
-                        'usdt_compra' => (float)($r['usdt_compra'] ?? 0),
-                        'usdt_venta'  => (float)($r['usdt_venta']  ?? 0),
-                        'activo'      => array_key_exists('activo', $r) ? (bool)$r['activo'] : true,
+                        'compra' => (float)($r['compra'] ?? 0),
+                        'venta'  => (float)($r['venta']  ?? 0),
+                        'activo' => array_key_exists('activo', $r) ? (bool)$r['activo'] : true,
                     ]
                 );
-
                 $upserted++;
             }
 
-            return response()->json([
-                'message'  => 'OK',
-                'upserted' => $upserted
-            ]);
+            return response()->json(['message' => 'OK', 'upserted' => $upserted]);
         });
     }
 }

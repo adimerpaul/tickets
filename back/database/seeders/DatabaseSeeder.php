@@ -45,6 +45,7 @@ class DatabaseSeeder extends Seeder
         $userAdmin->givePermissionTo(Permission::all());
         $this->call([
                 EventoSeeder::class,
+                MonedaSeeder::class,
 //                EventoHorarioSeeder::class,
         ]);
     }
