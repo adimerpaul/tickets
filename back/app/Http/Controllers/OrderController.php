@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Evento;
 use App\Models\Order;
+use App\Models\OrderEmailHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use function Laravel\Prompts\error;
 
@@ -88,20 +90,63 @@ class OrderController extends Controller
 //        vista errolog
         error_log("Vista usada: $view");
 
-        Mail::send($view, $payload, function ($message) use ($order, $subjectMap, $type, $request) {
+        $storedPdfPath = null;
+        $storedPdfName = null;
+        if ($request->hasFile('pdf')) {
+            $file = $request->file('pdf');
+            $storedPdfName = $file->getClientOriginalName() ?: ('entradas-' . $order->id . '.pdf');
+            $storedPdfPath = $file->storeAs(
+                'order-emails/' . $order->id,
+                time() . '-' . preg_replace('/\s+/', '_', $storedPdfName),
+                'public'
+            );
+        }
+
+        Mail::send($view, $payload, function ($message) use ($order, $subjectMap, $type, $request, $storedPdfName) {
             $message->to($order->email)
                 ->subject($subjectMap[$type] ?? 'Actualizacion de tu pedido');
 
             if ($request->hasFile('pdf')) {
                 $file = $request->file('pdf');
                 $message->attach($file->getRealPath(), [
-                    'as' => $file->getClientOriginalName() ?: ('entradas-' . $order->id . '.pdf'),
+                    'as' => $storedPdfName ?: ('entradas-' . $order->id . '.pdf'),
                     'mime' => $file->getMimeType() ?: 'application/pdf',
                 ]);
             }
         });
 
+        OrderEmailHistory::create([
+            'order_id' => $order->id,
+            'user_id' => optional($request->user())->id,
+            'type' => $type,
+            'subject' => $subjectMap[$type] ?? null,
+            'to_email' => $order->email,
+            'pdf_path' => $storedPdfPath,
+            'pdf_name' => $storedPdfName,
+        ]);
+
         return response()->json(['message' => 'Correo enviado']);
+    }
+
+    public function emailHistory(Order $order)
+    {
+        $rows = OrderEmailHistory::query()
+            ->where('order_id', $order->id)
+            ->orderByDesc('id')
+            ->get()
+            ->map(function (OrderEmailHistory $h) {
+                return [
+                    'id' => $h->id,
+                    'type' => $h->type,
+                    'subject' => $h->subject,
+                    'to_email' => $h->to_email,
+                    'pdf_name' => $h->pdf_name,
+                    'pdf_url' => $h->pdf_path ? Storage::disk('public')->url($h->pdf_path) : null,
+                    'created_at' => optional($h->created_at)->toDateTimeString(),
+                ];
+            });
+
+        return response()->json(['items' => $rows]);
     }
     function update(Request $request, Order $order)
     {
