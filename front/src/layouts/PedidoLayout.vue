@@ -426,15 +426,22 @@ export default {
 
       // dialog
       compraDialog: false,
-      accept_terms: false,
+      // accept_terms: false,
+      accept_terms: true,
       termsError: false,
 
       // customer
-      phone: '',
-      email_confirm: '',
-      dni: '',
-      email: '',
-      nombre_completo: '',
+      // phone: '',
+      // email_confirm: '',
+      // dni: '',
+      // email: '',
+      // nombre_completo: '',
+
+      phone: '69603027',
+      email_confirm: 'adimer101@gmail.com',
+      dni: '7336199',
+      email: 'adimer101@gmail.com',
+      nombre_completo: 'Adimer Paul Chambi Ajata',
 
       // carousel
       slide: 1,

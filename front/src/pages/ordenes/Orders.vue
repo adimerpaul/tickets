@@ -175,17 +175,23 @@
                     <q-item-section avatar><q-icon name="edit_location" /></q-item-section>
                     <q-item-section>Cambiar localizador</q-item-section>
                   </q-item>
-<!--                  mandar correo-->
-<!--                  <q-item clickable @click="enviarCorreo(o)" v-close-popup>-->
-<!--                    <q-item-section avatar><q-icon name="email" /></q-item-section>-->
-<!--                    <q-item-section>Enviar correo</q-item-section>-->
-<!--                  </q-item>-->
-<!--                  enviar 4 correos-->
-<!--                  4 Correos, 1 su pedpio est hacienod en proceso, 2 envio de las entradas , 3 su pedido no se pudo completar , 4 reembols, que haga el rembolso y cancelaro de stripe,  shodawn-->
-<!--                  <q-item clickable @click="enviarCorreo(o)" v-close-popup>-->
-<!--                    <q-item-section avatar><q-icon name="email" /></q-item-section>-->
-<!--                    <q-item-section> -->
-<!--                  </q-item>-->
+                  <q-separator />
+                  <q-item clickable @click="openEmailDialog(o, 'PROCESSING')" v-close-popup>
+                    <q-item-section avatar><q-icon name="email" /></q-item-section>
+                    <q-item-section>Correo: En proceso</q-item-section>
+                  </q-item>
+                  <q-item clickable @click="openEmailDialog(o, 'ENTRADAS')" v-close-popup>
+                    <q-item-section avatar><q-icon name="email" /></q-item-section>
+                    <q-item-section>Correo: Enviar entradas (PDF)</q-item-section>
+                  </q-item>
+                  <q-item clickable @click="openEmailDialog(o, 'FAILED')" v-close-popup>
+                    <q-item-section avatar><q-icon name="email" /></q-item-section>
+                    <q-item-section>Correo: No se pudo completar</q-item-section>
+                  </q-item>
+                  <q-item clickable @click="openEmailDialog(o, 'REFUND')" v-close-popup>
+                    <q-item-section avatar><q-icon name="email" /></q-item-section>
+                    <q-item-section>Correo: Reembolso</q-item-section>
+                  </q-item>
                 </q-list>
               </q-btn-dropdown>
             </td>
@@ -379,6 +385,49 @@
       </q-card>
     </q-dialog>
 
+    <!-- DIALOG ENVIO CORREO + PDF -->
+    <q-dialog v-model="emailDialog" persistent>
+      <q-card style="width: 520px; max-width: 95vw">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-subtitle1 text-weight-bold">Enviar correo</div>
+          <q-space />
+          <q-btn icon="close" flat round dense @click="emailDialog = false" />
+        </q-card-section>
+
+        <q-card-section class="q-pt-sm">
+          <div class="text-caption text-grey-7 q-mb-sm">
+            Orden #{{ emailForm.order?.id || '-' }} | Email: {{ emailForm.order?.email || '-' }}
+          </div>
+
+          <q-select
+            v-model="emailForm.type"
+            dense outlined
+            label="Tipo de correo"
+            :options="emailTypeOptions"
+            emit-value map-options
+          />
+
+          <q-file
+            v-model="emailForm.file"
+            dense outlined
+            accept=".pdf,application/pdf"
+            label="Adjuntar PDF (solo para Entradas)"
+            class="q-mt-md"
+            clearable
+          />
+
+          <div class="text-caption text-grey-7 q-mt-xs">
+            Para "Entradas" el PDF es obligatorio.
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat no-caps label="Cancelar" @click="emailDialog = false" />
+          <q-btn color="primary" no-caps label="Enviar" :loading="loading" @click="sendStatusEmail" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
@@ -418,7 +467,20 @@ export default {
       totalRows: 0,
 
       detailDialog: false,
-      detail: {}
+      detail: {},
+
+      emailDialog: false,
+      emailForm: {
+        order: null,
+        type: 'PROCESSING',
+        file: null
+      },
+      emailTypeOptions: [
+        { label: 'En proceso', value: 'PROCESSING' },
+        { label: 'Enviar entradas (PDF)', value: 'ENTRADAS' },
+        { label: 'No se pudo completar', value: 'FAILED' },
+        { label: 'Reembolso', value: 'REFUND' }
+      ]
     }
   },
 
@@ -530,6 +592,37 @@ export default {
     async openDetail (o) {
       this.detail = o
       this.detailDialog = true
+    },
+    openEmailDialog (o, type) {
+      this.emailForm.order = o
+      this.emailForm.type = type || 'PROCESSING'
+      this.emailForm.file = null
+      this.emailDialog = true
+    },
+    async sendStatusEmail () {
+      const order = this.emailForm.order
+      if (!order) return
+      if (this.emailForm.type === 'ENTRADAS' && !this.emailForm.file) {
+        this.$alert.error('Debe adjuntar un PDF para enviar las entradas')
+        return
+      }
+      try {
+        this.loading = true
+        const form = new FormData()
+        form.append('type', this.emailForm.type)
+        if (this.emailForm.file) {
+          form.append('pdf', this.emailForm.file)
+        }
+        await this.$axios.post(`orders/${order.id}/send-status-email`, form, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        this.$alert.success('Correo enviado correctamente')
+        this.emailDialog = false
+      } catch (e) {
+        this.$alert.error(e.response?.data?.message || 'Error al enviar el correo')
+      } finally {
+        this.loading = false
+      }
     },
     enviarCorreo(o) {
       console.log('Enviar correo para orden', o)
