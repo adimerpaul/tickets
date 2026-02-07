@@ -12,9 +12,10 @@ class Order extends Model implements AuditableContract
     protected $fillable = [
         'codigo_pedido','session_id','email','amount_total','currency','status',
         'metadata','items','dni','nombre_completo','nacionalidad','entrada_tipo',
+        'localizador',
 
         // 👇 nuevos / requeridos
-        'evento_id','starts_at','horario_adulto_id','horario_nino_id','adults','kids',
+        'evento_id','starts_at','horario_id','horario_adulto_id','horario_nino_id','adults','kids',
     ];
 
     protected $casts = [

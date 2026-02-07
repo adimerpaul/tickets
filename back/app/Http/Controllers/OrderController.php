@@ -7,6 +7,7 @@ use App\Models\Evento;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use function Laravel\Prompts\error;
 
@@ -42,6 +43,65 @@ class OrderController extends Controller
         });
 
         return response()->json(['message' => 'Email sent']);
+    }
+
+    public function sendStatusEmail(Request $request, Order $order)
+    {
+        $data = $request->validate([
+            'type' => 'required|string|in:PROCESSING,ENTRADAS,FAILED,REFUND',
+            'message' => 'nullable|string|max:2000',
+            'pdf' => 'nullable|file|mimes:pdf|max:10240',
+        ]);
+
+        if (!$order->email) {
+            return response()->json(['message' => 'La orden no tiene email'], 422);
+        }
+
+        $type = strtoupper($data['type']);
+        if ($type === 'ENTRADAS' && !$request->hasFile('pdf')) {
+            return response()->json(['message' => 'Debe adjuntar un PDF de entradas'], 422);
+        }
+
+        $viewMap = [
+            'PROCESSING' => 'emails.order_processing',
+            'ENTRADAS' => 'emails.order_entries',
+            'FAILED' => 'emails.order_failed',
+            'REFUND' => 'emails.order_refund',
+        ];
+        $subjectMap = [
+            'PROCESSING' => 'Tu pedido esta en proceso',
+            'ENTRADAS' => 'Te enviamos tus entradas',
+            'FAILED' => 'No se pudo completar tu pedido',
+            'REFUND' => 'Tu reembolso ha sido procesado',
+        ];
+
+        $view = $viewMap[$type] ?? null;
+        if (!$view) {
+            return response()->json(['message' => 'Tipo de correo invalido'], 422);
+        }
+
+        $payload = [
+            'order' => $order,
+            'custom_message' => $data['message'] ?? null,
+        ];
+        error_log("Enviando email tipo $type a {$order->email} con mensaje: " . ($data['message'] ?? ''));
+//        vista errolog
+        error_log("Vista usada: $view");
+
+        Mail::send($view, $payload, function ($message) use ($order, $subjectMap, $type, $request) {
+            $message->to($order->email)
+                ->subject($subjectMap[$type] ?? 'Actualizacion de tu pedido');
+
+            if ($request->hasFile('pdf')) {
+                $file = $request->file('pdf');
+                $message->attach($file->getRealPath(), [
+                    'as' => $file->getClientOriginalName() ?: ('entradas-' . $order->id . '.pdf'),
+                    'mime' => $file->getMimeType() ?: 'application/pdf',
+                ]);
+            }
+        });
+
+        return response()->json(['message' => 'Correo enviado']);
     }
     function update(Request $request, Order $order)
     {

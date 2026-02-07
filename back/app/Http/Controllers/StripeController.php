@@ -67,11 +67,13 @@ class StripeController extends Controller
         }
 
         // validación de cupos (sin bloquear)
+        $horario = null;
         if ($horarioId) {
             $h = EventoHorario::find($horarioId);
             if (!$h || !$h->activo) return response()->json(['message' => 'Horario inválido'], 422);
             $disp = max(0, (int)$h->capacidad - (int)$h->reservados);
             if ($totalQty > $disp) return response()->json(['message' => 'No hay cupos suficientes'], 422);
+            $horario = $h;
         }
 
         Stripe::setApiKey(config('services.stripe.secret'));
@@ -132,7 +134,8 @@ class StripeController extends Controller
 
             // 👇👇👇 FIX: columnas reales
             'evento_id' => (int)($meta['evento_id'] ?? 0),
-            'starts_at' => $meta['starts_at'] ?? null,
+            'starts_at' => $horario?->starts_at ?? ($meta['starts_at'] ?? null),
+            'horario_id' => $horario?->id ?? null,
             'horario_adulto_id' => $horarioId,
             'horario_nino_id' => null,
             'adults' => $adultsForSave,
@@ -210,6 +213,10 @@ class StripeController extends Controller
                 $horarioId = isset($meta['horario_id']) ? (int)$meta['horario_id'] : null;
                 $horarioAdultoId = isset($meta['horario_adulto_id']) ? (int)$meta['horario_adulto_id'] : null;
                 $horarioNinoId   = isset($meta['horario_nino_id']) ? (int)$meta['horario_nino_id'] : null;
+
+                if (!$horarioId) {
+                    $horarioId = (int)($order->horario_id ?? 0);
+                }
 
                 if (!$horarioId) {
                     $horarioId = $horarioAdultoId ?: $horarioNinoId;

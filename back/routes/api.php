@@ -40,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{order}/pdfEntradas', [OrderController::class, 'pdfEntradas']);
 //    await this.$axios.post(`orders/${o.id}/sendEmail`)
     Route::post('/orders/{order}/sendEmail', [OrderController::class, 'sendEmailWithEntradasPdf']);
+    Route::post('/orders/{order}/send-status-email', [OrderController::class, 'sendStatusEmail']);
     Route::get('/orders-pdf', [OrderController::class, 'pdfList']); // pdf del listado filtrado
 
 // eventos
