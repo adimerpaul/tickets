@@ -192,6 +192,11 @@
                     <q-item-section avatar><q-icon name="email" /></q-item-section>
                     <q-item-section>Correo: Reembolso</q-item-section>
                   </q-item>
+                  <q-separator />
+                  <q-item clickable @click="openEmailHistory(o)" v-close-popup>
+                    <q-item-section avatar><q-icon name="history" /></q-item-section>
+                    <q-item-section>Historial de correos</q-item-section>
+                  </q-item>
                 </q-list>
               </q-btn-dropdown>
             </td>
@@ -428,6 +433,60 @@
       </q-card>
     </q-dialog>
 
+    <!-- DIALOG HISTORIAL CORREOS -->
+    <q-dialog v-model="historyDialog">
+      <q-card style="width: 760px; max-width: 95vw">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-subtitle1 text-weight-bold">Historial de correos</div>
+          <q-space />
+          <q-btn icon="close" flat round dense @click="historyDialog = false" />
+        </q-card-section>
+
+        <q-card-section class="q-pt-sm">
+          <div class="text-caption text-grey-7 q-mb-sm">
+            Orden #{{ historyOrder?.id || '-' }} | Email: {{ historyOrder?.email || '-' }}
+          </div>
+
+          <q-markup-table dense flat bordered>
+            <thead>
+            <tr>
+              <th class="text-left">Tipo</th>
+              <th class="text-left">Asunto</th>
+              <th class="text-left">Destinatario</th>
+              <th class="text-left">Fecha</th>
+              <th class="text-left">PDF</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-if="historyLoading">
+              <td colspan="5" class="text-center q-pa-md">
+                <q-spinner size="24px" />
+              </td>
+            </tr>
+            <tr v-else-if="!historyItems.length">
+              <td colspan="5" class="text-center text-grey-7 q-pa-md">Sin registros</td>
+            </tr>
+            <tr v-else v-for="h in historyItems" :key="h.id">
+              <td class="text-left">{{ h.type }}</td>
+              <td class="text-left">{{ h.subject || '-' }}</td>
+              <td class="text-left">{{ h.to_email || '-' }}</td>
+              <td class="text-left">{{ formatDT(h.created_at) }}</td>
+              <td class="text-left">
+                <q-btn
+                  v-if="h.pdf_url"
+                  dense flat no-caps icon="picture_as_pdf"
+                  label="Ver PDF"
+                  @click="openPdf(h.pdf_url)"
+                />
+                <span v-else>-</span>
+              </td>
+            </tr>
+            </tbody>
+          </q-markup-table>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
@@ -480,7 +539,12 @@ export default {
         { label: 'Enviar entradas (PDF)', value: 'ENTRADAS' },
         { label: 'No se pudo completar', value: 'FAILED' },
         { label: 'Reembolso', value: 'REFUND' }
-      ]
+      ],
+
+      historyDialog: false,
+      historyLoading: false,
+      historyItems: [],
+      historyOrder: null
     }
   },
 
@@ -642,6 +706,23 @@ export default {
           this.loading = false
         }
       })
+    },
+    async openEmailHistory (o) {
+      this.historyOrder = o
+      this.historyItems = []
+      this.historyDialog = true
+      this.historyLoading = true
+      try {
+        const { data } = await this.$axios.get(`orders/${o.id}/email-history`)
+        this.historyItems = data.items || []
+      } catch (e) {
+        this.$alert.error(e.response?.data?.message || 'Error cargando historial')
+      } finally {
+        this.historyLoading = false
+      }
+    },
+    openPdf (url) {
+      window.open(url, '_blank')
     },
     changueLocalizador(o) {
       console.log('Cambiar localizador para orden', o)
