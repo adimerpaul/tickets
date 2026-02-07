@@ -9,6 +9,9 @@ class EventoSeeder extends Seeder
 {
     public function run(): void
     {
+        $monedaId = \App\Models\Moneda::orderBy('orden')->orderBy('id')->value('id');
+        $idiomaId = \App\Models\Idioma::orderBy('orden')->orderBy('id')->value('id');
+
         $items = [
             ['nombre' => 'Giza Plateau', 'slug' => 'giza-plateau', 'categoria' => 'site'],
             ['nombre' => 'Egyptian Museum', 'slug' => 'egyptian-museum', 'categoria' => 'museum'],
@@ -35,8 +38,8 @@ class EventoSeeder extends Seeder
                     'categoria' => $it['categoria'],
                     'orden' => $orden++,
                     'regla_nacionalidad' => 'ALL',
-//                    'moneda' => 'EGP', euro
-                    'moneda' => 'EUR',
+                    'moneda_id' => $monedaId,
+                    'idioma_id' => $idiomaId,
                 ]
             );
         }

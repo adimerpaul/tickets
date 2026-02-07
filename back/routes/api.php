@@ -127,6 +127,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::put('evento-tipos-entrada/{tipo}', [EventoPrecioController::class, 'tiposUpdate']);
     Route::delete('evento-tipos-entrada/{tipo}', [EventoPrecioController::class, 'tiposDestroy']);
+    Route::post('evento-tipos-entrada/{tipo}/imagen', [EventoPrecioController::class, 'tiposImagen']);
 
     Route::put('evento-segmentos/{seg}', [EventoPrecioController::class, 'segmentosUpdate']);
     Route::delete('evento-segmentos/{seg}', [EventoPrecioController::class, 'segmentosDestroy']);

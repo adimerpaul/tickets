@@ -15,7 +15,7 @@ class Evento extends Model implements AuditableContract
         'nombre','slug','descripcion',
         'pais','ciudad','ubicacion','lat','lng',
         'activo','imagen','categoria','orden',
-        'regla_nacionalidad','moneda',
+        'regla_nacionalidad','moneda_id','idioma_id',
 
         // nuevo
         'slot_interval_min','semana_hora_inicio','semana_hora_fin','generar_semanas',
@@ -51,6 +51,16 @@ class Evento extends Model implements AuditableContract
     public function monedas()
     {
         return $this->hasMany(\App\Models\EventoMoneda::class, 'evento_id');
+    }
+
+    public function moneda()
+    {
+        return $this->belongsTo(\App\Models\Moneda::class, 'moneda_id');
+    }
+
+    public function idioma()
+    {
+        return $this->belongsTo(\App\Models\Idioma::class, 'idioma_id');
     }
 
 }

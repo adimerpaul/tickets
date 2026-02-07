@@ -12,6 +12,8 @@ use App\Models\EventoPrecio;
 use App\Models\Moneda;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class EventoPrecioController extends Controller
 {
@@ -183,6 +185,28 @@ class EventoPrecioController extends Controller
     {
         $tipo->delete();
         return response()->json(['message' => 'OK']);
+    }
+
+    public function tiposImagen(Request $request, EventoTipoEntrada $tipo)
+    {
+        if ($request->hasFile('imagen')) {
+            $file = $request->file('imagen');
+            $filename = time() . '.' . $file->getClientOriginalExtension();
+            $path = public_path('images/' . $filename);
+
+            $manager = new ImageManager(new Driver());
+            $manager->read($file->getPathname())
+                ->resize(300, 300)
+                ->toJpeg(70)
+                ->save($path);
+
+            $tipo->imagen = $filename;
+            $tipo->save();
+
+            return response()->json(['message' => 'Imagen actualizada', 'imagen' => $filename]);
+        }
+
+        return response()->json(['message' => 'No se ha enviado un archivo'], 400);
     }
 
     // ==========================

@@ -66,6 +66,7 @@ class EventoController extends Controller
         $perPage = $perPage > 0 ? min($perPage, 200) : 50;
 
         $q = Evento::query()
+            ->with(['moneda:id,codigo,nombre','idioma:id,codigo,nombre'])
             ->orderBy('orden')
             ->orderByDesc('id');
 
@@ -85,12 +86,17 @@ class EventoController extends Controller
         return $q->paginate($perPage);
     }
 
-    public function show(Evento $evento) { return $evento; }
+    public function show(Evento $evento)
+    {
+        $evento->load(['moneda:id,codigo,nombre','idioma:id,codigo,nombre']);
+        return $evento;
+    }
 
     public function showBySlug($slug)
     {
         $evento = Evento::where('slug', $slug)->first();
         if (!$evento) return response()->json(['message' => 'Evento no encontrado'], 404);
+        $evento->load(['moneda:id,codigo,nombre','idioma:id,codigo,nombre']);
         return $evento;
     }
 
@@ -127,7 +133,8 @@ class EventoController extends Controller
             'orden' => 'nullable|integer',
             'activo' => 'nullable|boolean',
             'regla_nacionalidad' => 'nullable|in:ALL,EGYPTIAN_ONLY,FOREIGNERS_ONLY',
-            'moneda' => 'nullable|string|max:10',
+            'moneda_id' => 'required|integer|exists:monedas,id',
+            'idioma_id' => 'required|integer|exists:idiomas,id',
 
             // config horarios
             'slot_interval_min' => 'nullable|integer|min:5|max:240',
@@ -188,7 +195,8 @@ class EventoController extends Controller
             'orden' => 'nullable|integer',
             'activo' => 'nullable|boolean',
             'regla_nacionalidad' => 'nullable|in:ALL,EGYPTIAN_ONLY,FOREIGNERS_ONLY',
-            'moneda' => 'nullable|string|max:10',
+            'moneda_id' => 'sometimes|required|integer|exists:monedas,id',
+            'idioma_id' => 'sometimes|required|integer|exists:idiomas,id',
 
             // nuevo
             'slot_interval_min' => 'nullable|integer|min:5|max:240',

@@ -29,7 +29,11 @@ class StripeController extends Controller
         $request->validate([
             'metadata.evento_id' => 'required',
             'metadata.starts_at' => 'required',
-            // ids horarios (puede existir solo uno si vendes solo adulto o solo niño)
+            // nuevo
+            'metadata.horario_id' => 'nullable|integer',
+            'metadata.total_qty' => 'nullable|integer|min:0',
+            'metadata.segmentos' => 'nullable',
+            // legacy
             'metadata.horario_adulto_id' => 'nullable|integer',
             'metadata.horario_nino_id' => 'nullable|integer',
             'metadata.adults' => 'nullable|integer|min:0',
@@ -38,37 +42,36 @@ class StripeController extends Controller
 
         $adultQty = (int)($meta['adults'] ?? 0);
         $kidQty   = (int)($meta['kids'] ?? 0);
+        $totalQty = (int)($meta['total_qty'] ?? 0);
+        if ($totalQty <= 0) {
+            $totalQty = $adultQty + $kidQty;
+        }
 
-        if ($adultQty + $kidQty <= 0) {
+        if ($totalQty <= 0) {
             return response()->json(['message' => 'Cantidad inválida'], 422);
         }
 
         // ====== CHECK CUPO ANTES DE CREAR SESIÓN
         // Nota: Esto NO "reserva"; solo valida que haya cupos al momento de iniciar checkout.
         // El ajuste definitivo lo hacemos al PAID (webhook).
+        $horarioId = isset($meta['horario_id']) ? (int)$meta['horario_id'] : null;
         $horarioAdultoId = isset($meta['horario_adulto_id']) ? (int)$meta['horario_adulto_id'] : null;
         $horarioNinoId   = isset($meta['horario_nino_id']) ? (int)$meta['horario_nino_id'] : null;
 
-        if ($adultQty > 0 && !$horarioAdultoId) {
-            return response()->json(['message' => 'Falta horario_adulto_id'], 422);
+        if (!$horarioId) {
+            $horarioId = $horarioAdultoId ?: $horarioNinoId;
         }
-        if ($kidQty > 0 && !$horarioNinoId) {
-            return response()->json(['message' => 'Falta horario_nino_id'], 422);
+
+        if ($totalQty > 0 && !$horarioId) {
+            return response()->json(['message' => 'Falta horario_id'], 422);
         }
 
         // validación de cupos (sin bloquear)
-        if ($adultQty > 0) {
-            $hA = EventoHorario::find($horarioAdultoId);
-            if (!$hA || !$hA->activo) return response()->json(['message' => 'Horario Adulto inválido'], 422);
-            $disp = max(0, (int)$hA->capacidad - (int)$hA->reservados);
-            if ($adultQty > $disp) return response()->json(['message' => 'No hay cupos suficientes (Adulto)'], 422);
-        }
-
-        if ($kidQty > 0) {
-            $hN = EventoHorario::find($horarioNinoId);
-            if (!$hN || !$hN->activo) return response()->json(['message' => 'Horario Niño inválido'], 422);
-            $disp = max(0, (int)$hN->capacidad - (int)$hN->reservados);
-            if ($kidQty > $disp) return response()->json(['message' => 'No hay cupos suficientes (Niño)'], 422);
+        if ($horarioId) {
+            $h = EventoHorario::find($horarioId);
+            if (!$h || !$h->activo) return response()->json(['message' => 'Horario inválido'], 422);
+            $disp = max(0, (int)$h->capacidad - (int)$h->reservados);
+            if ($totalQty > $disp) return response()->json(['message' => 'No hay cupos suficientes'], 422);
         }
 
         Stripe::setApiKey(config('services.stripe.secret'));
@@ -110,6 +113,13 @@ class StripeController extends Controller
         }
 
         // 5) Guardar PENDING
+        $adultsForSave = $adultQty;
+        $kidsForSave = $kidQty;
+        if (($adultQty + $kidQty) === 0 && $totalQty > 0) {
+            $adultsForSave = $totalQty;
+            $kidsForSave = 0;
+        }
+
         Order::create([
             'codigo_pedido' => $this->generateOrderCode(),
             'session_id' => $session->id,
@@ -123,10 +133,10 @@ class StripeController extends Controller
             // 👇👇👇 FIX: columnas reales
             'evento_id' => (int)($meta['evento_id'] ?? 0),
             'starts_at' => $meta['starts_at'] ?? null,
-            'horario_adulto_id' => isset($meta['horario_adulto_id']) ? (int)$meta['horario_adulto_id'] : null,
-            'horario_nino_id' => isset($meta['horario_nino_id']) ? (int)$meta['horario_nino_id'] : null,
-            'adults' => (int)($meta['adults'] ?? 0),
-            'kids' => (int)($meta['kids'] ?? 0),
+            'horario_adulto_id' => $horarioId,
+            'horario_nino_id' => null,
+            'adults' => $adultsForSave,
+            'kids' => $kidsForSave,
 
             // extra
             'dni' => $meta['dni'] ?? null,
@@ -192,42 +202,69 @@ class StripeController extends Controller
                 $meta = $order->metadata ?: [];
                 $adultQty = (int)($meta['adults'] ?? 0);
                 $kidQty   = (int)($meta['kids'] ?? 0);
+                $totalQty = (int)($meta['total_qty'] ?? 0);
+                if ($totalQty <= 0) {
+                    $totalQty = $adultQty + $kidQty;
+                }
 
+                $horarioId = isset($meta['horario_id']) ? (int)$meta['horario_id'] : null;
                 $horarioAdultoId = isset($meta['horario_adulto_id']) ? (int)$meta['horario_adulto_id'] : null;
                 $horarioNinoId   = isset($meta['horario_nino_id']) ? (int)$meta['horario_nino_id'] : null;
 
-                if ($adultQty > 0 && $horarioAdultoId) {
-                    $hA = EventoHorario::lockForUpdate()->find($horarioAdultoId);
-                    if ($hA) {
-                        $disp = max(0, (int)$hA->capacidad - (int)$hA->reservados);
-                        if ($adultQty <= $disp) {
-                            $hA->reservados = (int)$hA->reservados + $adultQty;
-                            $hA->save();
+                if (!$horarioId) {
+                    $horarioId = $horarioAdultoId ?: $horarioNinoId;
+                }
+
+                if ($horarioId && $totalQty > 0) {
+                    $h = EventoHorario::lockForUpdate()->find($horarioId);
+                    if ($h) {
+                        $disp = max(0, (int)$h->capacidad - (int)$h->reservados);
+                        if ($totalQty <= $disp) {
+                            $h->reservados = (int)$h->reservados + $totalQty;
+                            $h->save();
                         } else {
-                            Log::warning('Overbooking Adulto prevented', [
-                                'horario_id' => $horarioAdultoId,
-                                'req' => $adultQty,
+                            Log::warning('Overbooking prevented', [
+                                'horario_id' => $horarioId,
+                                'req' => $totalQty,
                                 'disp' => $disp,
                                 'order_id' => $order->id
                             ]);
                         }
                     }
-                }
+                } else {
+                    if ($adultQty > 0 && $horarioAdultoId) {
+                        $hA = EventoHorario::lockForUpdate()->find($horarioAdultoId);
+                        if ($hA) {
+                            $disp = max(0, (int)$hA->capacidad - (int)$hA->reservados);
+                            if ($adultQty <= $disp) {
+                                $hA->reservados = (int)$hA->reservados + $adultQty;
+                                $hA->save();
+                            } else {
+                                Log::warning('Overbooking Adulto prevented', [
+                                    'horario_id' => $horarioAdultoId,
+                                    'req' => $adultQty,
+                                    'disp' => $disp,
+                                    'order_id' => $order->id
+                                ]);
+                            }
+                        }
+                    }
 
-                if ($kidQty > 0 && $horarioNinoId) {
-                    $hN = EventoHorario::lockForUpdate()->find($horarioNinoId);
-                    if ($hN) {
-                        $disp = max(0, (int)$hN->capacidad - (int)$hN->reservados);
-                        if ($kidQty <= $disp) {
-                            $hN->reservados = (int)$hN->reservados + $kidQty;
-                            $hN->save();
-                        } else {
-                            Log::warning('Overbooking Niño prevented', [
-                                'horario_id' => $horarioNinoId,
-                                'req' => $kidQty,
-                                'disp' => $disp,
-                                'order_id' => $order->id
-                            ]);
+                    if ($kidQty > 0 && $horarioNinoId) {
+                        $hN = EventoHorario::lockForUpdate()->find($horarioNinoId);
+                        if ($hN) {
+                            $disp = max(0, (int)$hN->capacidad - (int)$hN->reservados);
+                            if ($kidQty <= $disp) {
+                                $hN->reservados = (int)$hN->reservados + $kidQty;
+                                $hN->save();
+                            } else {
+                                Log::warning('Overbooking Niño prevented', [
+                                    'horario_id' => $horarioNinoId,
+                                    'req' => $kidQty,
+                                    'disp' => $disp,
+                                    'order_id' => $order->id
+                                ]);
+                            }
                         }
                     }
                 }
