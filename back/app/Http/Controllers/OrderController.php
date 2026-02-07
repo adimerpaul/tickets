@@ -236,6 +236,52 @@ class OrderController extends Controller
         return response()->json($data);
     }
 
+    public function adminIndex(Request $request)
+    {
+        $q = Order::query()->with(['evento:id,nombre,slug']);
+
+        if ($request->filled('search')) {
+            $s = trim($request->search);
+            $q->where(function ($qq) use ($s) {
+                $qq->where('session_id', 'like', "%$s%")
+                    ->orWhere('payment_intent_id', 'like', "%$s%")
+                    ->orWhere('email', 'like', "%$s%")
+                    ->orWhere('localizador', 'like', "%$s%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $q->where('status', $request->status);
+        }
+
+        if ($request->filled('from')) {
+            $from = Carbon::parse($request->from)->startOfDay();
+            $q->where('created_at', '>=', $from);
+        }
+        if ($request->filled('to')) {
+            $to = Carbon::parse($request->to)->endOfDay();
+            $q->where('created_at', '<=', $to);
+        }
+
+        if ($request->filled('evento_id')) {
+            $q->where('evento_id', $request->evento_id);
+        }
+
+        $sortBy = $request->get('sortBy', 'id');
+        $sortDir = $request->get('sortDir', 'desc');
+        if (!in_array($sortBy, ['id', 'created_at', 'paid_at', 'amount_total', 'status'])) $sortBy = 'id';
+        if (!in_array($sortDir, ['asc', 'desc'])) $sortDir = 'desc';
+
+        $q->orderBy($sortBy, $sortDir);
+
+        $perPage = (int)$request->get('perPage', 15);
+        $perPage = max(5, min(100, $perPage));
+
+        $data = $q->paginate($perPage);
+
+        return response()->json($data);
+    }
+
     public function stats(Request $request)
     {
         // aplicar los mismos filtros que index (para que las cards reflejen lo filtrado)

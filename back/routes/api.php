@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/users/{user}/permissions', [App\Http\Controllers\UserController::class, 'updateUserPermissions']);
 
     Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders-admin', [OrderController::class, 'adminIndex']);
     Route::get('/orders/stats', [OrderController::class, 'stats']);
     Route::put('/orders/{order}', [OrderController::class, 'update']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);

@@ -23,4 +23,9 @@ class Order extends Model implements AuditableContract
         'items' => 'array',
 //        'paid_at' => 'datetime',
     ];
+
+    public function evento()
+    {
+        return $this->belongsTo(\App\Models\Evento::class, 'evento_id');
+    }
 }

@@ -38,7 +38,8 @@ class DatabaseSeeder extends Seeder
             'Reservas',
             'Idiomas',
             'Precios',
-            'Reportes'
+            'Reportes',
+            'Contadora'
         ];;
         foreach ($permisos as $permiso) {
             Permission::create(['name' => $permiso]);
