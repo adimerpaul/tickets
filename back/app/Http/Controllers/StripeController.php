@@ -94,7 +94,7 @@ class StripeController extends Controller
             'payment_method_types' => ['card'],
             'line_items' => $lineItems,
             'success_url' => rtrim(env('FRONTEND_URL'), '/') . '/pedido?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url'  => rtrim(env('FRONTEND_URL'), '/') . '/pago-cancelado',
+            'cancel_url'  => rtrim(env('FRONTEND_URL'), '/') . '/pedido?cancelled=1',
             'customer_email' => $validated['customer_email'] ?? null,
             'metadata' => $meta,
         ]);
