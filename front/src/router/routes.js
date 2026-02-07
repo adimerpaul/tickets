@@ -31,6 +31,11 @@ const routes = [
         path: '/evento/:site',
         component: () => import('pages/eventos/SiteDetails.vue'),
         meta: {requiresAuth: true, perm: 'Egipto'}
+      },
+      {
+        path: '/control-pagos',
+        component: () => import('pages/ordenes/PaymentsControl.vue'),
+        meta: {requiresAuth: true, perm: 'Contadora'}
       }
       // {
       //   path: '/reservas',

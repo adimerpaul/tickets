@@ -272,6 +272,25 @@
           </q-item-section>
         </q-item>
 
+        <!-- CONTROL DE PAGOS -->
+        <q-item
+          dense
+          to="/control-pagos"
+          exact
+          clickable
+          class="menu-item"
+          active-class="menu-active"
+          v-close-popup
+          v-if="hasPermission('Contadora')"
+        >
+          <q-item-section avatar>
+            <q-icon name="paid" class="text-white" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-white">Control de pagos</q-item-label>
+          </q-item-section>
+        </q-item>
+
         <!-- FOOTER -->
         <div class="q-pa-md">
           <div class="text-white-7 text-caption">
