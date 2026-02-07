@@ -22,9 +22,11 @@
                   class="row items-center no-wrap q-px-md q-py-sm"
                   style="border-radius:999px;background:rgba(20,20,20,.86);backdrop-filter:blur(10px);"
                 >
-                  <div class="row items-center no-wrap">
+                  <div class="row items-center no-wrap cursor-pointer">
                     <div class="brand-dot q-mr-sm"></div>
-                    <div class="text-white text-weight-bold">VisitaEgipto</div>
+                    <div class="text-white text-weight-bold" @click="$router.push('/')">
+                      {{ evento?.nombre || 'Evento' }}
+                    </div>
                   </div>
 
                   <q-space />
@@ -40,7 +42,7 @@
                     active-color="white"
                     indicator-color="transparent"
                   >
-                    <q-tab name="tickets" label="Tiquetes" />
+                    <q-tab name="tickets" label="Tiquetes"  />
                     <q-tab name="gallery" label="Galería" />
                     <q-tab name="faq" label="Preguntas frecuentes" />
                     <q-tab name="contact" label="Contacto" />

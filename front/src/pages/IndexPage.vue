@@ -1,234 +1,227 @@
 <template>
   <q-page class="q-pa-md bg-grey-2">
-    <div class="row justify-center">
-      <div class="col-12 col-md-8 col-lg-6">
-
-        <q-card flat bordered class="q-pa-md">
-          <!-- Header -->
-          <div class="row items-center q-mb-md">
-            <div>
-              <div class="text-h6 text-weight-bold">{{ $t('tickets.title') }}</div>
-              <div class="text-caption text-grey-7">{{ $t('tickets.subtitle') }}</div>
-            </div>
-
-            <q-space />
-
-            <q-chip color="primary" text-color="white" dense class="q-mr-sm">
-              {{ $t('tickets.total') }}: {{ formatEUR(total) }}
-            </q-chip>
-
-            <q-btn flat dense no-caps icon="language" :label="lang.toUpperCase()">
-              <q-menu>
-                <q-list style="min-width: 160px">
-                  <q-item clickable v-close-popup @click="setLang('es')">
-                    <q-item-section>Español</q-item-section>
-                  </q-item>
-                  <q-item clickable v-close-popup @click="setLang('en')">
-                    <q-item-section>English</q-item-section>
-                  </q-item>
-                </q-list>
-              </q-menu>
-            </q-btn>
-          </div>
-
-          <!-- EU + Fecha/Hora -->
-          <div class="row q-col-gutter-md">
+    <div class="row q-col-gutter-md q-mb-md">
+      <div class="col-12">
+        <q-card flat bordered>
+          <q-card-section class="row items-center q-col-gutter-md">
             <div class="col-12">
-              <div class="text-subtitle2 text-weight-medium">{{ $t('tickets.euQuestion') }}</div>
-              <q-option-group
-                v-model="isEU"
-                inline
-                :options="[
-                  { label: $t('tickets.yes'), value: true },
-                  { label: $t('tickets.no'), value: false }
-                ]"
-                class="q-mt-xs"
-              />
+              <div class="text-h6">Dashboard</div>
+              <div class="text-caption text-grey-7">Resumen financiero (sin pendientes)</div>
             </div>
 
-            <div class="col-12 col-md-6">
-              <q-input
-                v-model="date"
-                type="date"
-                dense
-                outlined
-                :label="$t('tickets.date')"
-              >
-                <template #prepend><q-icon name="event" /></template>
-              </q-input>
+            <div class="col-12 col-sm-6 col-md-3">
+              <q-input v-model="filters.from" dense outlined type="date" label="Desde" />
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+              <q-input v-model="filters.to" dense outlined type="date" label="Hasta" />
+            </div>
+            <div class="col-12 col-sm-6 col-md-2">
+              <q-input v-model="filters.time_from" dense outlined type="time" label="Hora desde" />
+            </div>
+            <div class="col-12 col-sm-6 col-md-2">
+              <q-input v-model="filters.time_to" dense outlined type="time" label="Hora hasta" />
             </div>
 
-            <div class="col-12 col-md-6">
-              <q-select
-                v-model="time"
-                :options="timeOptions"
-                dense
-                outlined
-                :label="$t('tickets.time')"
-                emit-value
-                map-options
-                clearable
-              >
-                <template #prepend><q-icon name="schedule" /></template>
-              </q-select>
+            <div class="col-12 col-md-auto">
+              <q-btn color="primary" no-caps icon="refresh" label="Aplicar" :loading="loading" @click="reload" />
             </div>
-          </div>
-
-          <q-separator class="q-my-md" />
-
-          <!-- Entradas -->
-          <div class="text-subtitle2 text-weight-bold q-mb-sm">{{ $t('tickets.entries') }}</div>
-
-          <!-- Adultos -->
-          <q-card flat bordered class="q-pa-md q-mb-sm">
-            <div class="row items-center">
-              <div class="col">
-                <div class="text-subtitle2 text-weight-medium">{{ $t('tickets.adult') }}</div>
-                <div class="text-caption text-grey-7">{{ $t('tickets.adultHint') }}</div>
-              </div>
-
-              <div class="col-auto text-right q-mr-md">
-                <div class="text-subtitle2 text-weight-bold">{{ formatEUR(priceAdult) }}</div>
-                <div class="text-caption text-grey-7">{{ $t('tickets.each') }}</div>
-              </div>
-
-              <div class="col-auto">
-                <q-btn round dense flat icon="remove" @click="dec('adult')" />
-                <q-chip class="q-mx-sm" square>{{ adults }}</q-chip>
-                <q-btn round dense flat icon="add" @click="inc('adult')" />
-              </div>
+            <div class="col-12 col-md-auto">
+              <q-btn outline color="grey-8" no-caps icon="restart_alt" label="Limpiar" :disable="loading" @click="resetFilters" />
             </div>
-          </q-card>
-
-          <!-- Niños -->
-          <q-card flat bordered class="q-pa-md">
-            <div class="row items-center">
-              <div class="col">
-                <div class="text-subtitle2 text-weight-medium">{{ $t('tickets.kid') }}</div>
-                <div class="text-caption text-grey-7">{{ $t('tickets.kidHint') }}</div>
-              </div>
-
-              <div class="col-auto text-right q-mr-md">
-                <div class="text-subtitle2 text-weight-bold">{{ formatEUR(priceKid) }}</div>
-                <div class="text-caption text-grey-7">{{ $t('tickets.each') }}</div>
-              </div>
-
-              <div class="col-auto">
-                <q-btn round dense flat icon="remove" @click="dec('kid')" />
-                <q-chip class="q-mx-sm" square>{{ kids }}</q-chip>
-                <q-btn round dense flat icon="add" @click="inc('kid')" />
-              </div>
-            </div>
-          </q-card>
-
-          <q-separator class="q-my-md" />
-
-          <!-- Resumen -->
-          <div class="row items-center">
-            <div class="col">
-              <div class="text-caption text-grey-7">{{ $t('tickets.subtotal') }}</div>
-              <div class="text-subtitle1 text-weight-bold">{{ formatEUR(total) }}</div>
-            </div>
-
-            <div class="col-auto">
-              <q-btn
-                unelevated
-                color="black"
-                no-caps
-                icon="payments"
-                :label="$t('tickets.pay')"
-                :loading="loading"
-                :disable="total <= 0"
-                @click="onBuy"
-              />
-            </div>
-          </div>
-
-          <div class="text-caption text-grey-7 q-mt-sm">
-            {{ $t('tickets.note') }}
-          </div>
+          </q-card-section>
         </q-card>
+      </div>
+    </div>
 
+    <div class="row q-col-gutter-md q-mb-md">
+      <div class="col-12 col-sm-6 col-md-3">
+        <q-card flat bordered>
+          <q-item class="bg-positive text-white">
+            <q-item-section avatar><q-icon name="check_circle" size="28px" /></q-item-section>
+            <q-item-section>
+              <q-item-label caption class="text-white">Pagos efectivos</q-item-label>
+              <q-item-label class="text-h6">{{ totals.count }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-card>
+      </div>
+      <div class="col-12 col-sm-6 col-md-3">
+        <q-card flat bordered>
+          <q-item class="bg-indigo-8 text-white">
+            <q-item-section avatar><q-icon name="paid" size="28px" /></q-item-section>
+            <q-item-section>
+              <q-item-label caption class="text-white">Total cobrado</q-item-label>
+              <q-item-label class="text-h6">{{ formatMoney(totals.amount) }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-card>
+      </div>
+      <div class="col-12 col-sm-6 col-md-3">
+        <q-card flat bordered>
+          <q-item class="bg-grey-9 text-white">
+            <q-item-section avatar><q-icon name="receipt_long" size="28px" /></q-item-section>
+            <q-item-section>
+              <q-item-label caption class="text-white">Ticket promedio</q-item-label>
+              <q-item-label class="text-h6">{{ formatMoney(avgTicket) }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-card>
+      </div>
+      <div class="col-12 col-sm-6 col-md-3">
+        <q-card flat bordered>
+          <q-item class="bg-deep-purple-8 text-white">
+            <q-item-section avatar><q-icon name="schedule" size="28px" /></q-item-section>
+            <q-item-section>
+              <q-item-label caption class="text-white">Rango aplicado</q-item-label>
+              <q-item-label class="text-h6">{{ rangeLabel }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-card>
+      </div>
+    </div>
+
+    <div class="row q-col-gutter-md">
+      <div class="col-12 col-lg-8">
+        <q-card flat bordered>
+          <q-card-section>
+            <div class="text-subtitle1 text-weight-bold q-mb-sm">Ingresos por día</div>
+            <apexchart type="area" height="280" :options="dayChartOptions" :series="daySeries" />
+          </q-card-section>
+        </q-card>
+      </div>
+      <div class="col-12 col-lg-4">
+        <q-card flat bordered>
+          <q-card-section>
+            <div class="text-subtitle1 text-weight-bold q-mb-sm">Estado de pagos</div>
+            <apexchart type="donut" height="280" :options="statusChartOptions" :series="statusSeries" />
+          </q-card-section>
+        </q-card>
+      </div>
+    </div>
+
+    <div class="row q-col-gutter-md q-mt-md">
+      <div class="col-12">
+        <q-card flat bordered>
+          <q-card-section>
+            <div class="text-subtitle1 text-weight-bold q-mb-sm">Ingresos por hora</div>
+            <apexchart type="bar" height="260" :options="hourChartOptions" :series="hourSeries" />
+          </q-card-section>
+        </q-card>
       </div>
     </div>
   </q-page>
 </template>
 
 <script>
+import VueApexCharts from 'vue3-apexcharts'
+
 export default {
   name: 'IndexPage',
+  components: {
+    apexchart: VueApexCharts
+  },
   data () {
     return {
       loading: false,
-      lang: localStorage.getItem('lang') || 'es',
-
-      isEU: true,
-      date: '2026-01-17',
-      time: null,
-
-      adults: 1,
-      kids: 0,
-
-      priceAdult: 33,
-      priceKid: 16.50,
-
-      timeOptions: [
-        '09:00', '09:30', '10:00', '10:30',
-        '11:00', '11:30', '12:00', '12:30',
-        '13:00', '13:30', '14:00', '14:30',
-        '15:00', '15:30', '16:00', '16:30'
-      ].map(v => ({ label: v, value: v }))
+      filters: {
+        from: '',
+        to: '',
+        time_from: '',
+        time_to: ''
+      },
+      totals: {
+        count: 0,
+        amount: 0
+      },
+      byDay: [],
+      byHour: [],
+      byStatus: []
     }
   },
   computed: {
-    total () {
-      return (this.adults * this.priceAdult) + (this.kids * this.priceKid)
+    avgTicket () {
+      if (!this.totals.count) return 0
+      return this.totals.amount / this.totals.count
+    },
+    rangeLabel () {
+      const f = this.filters.from || '—'
+      const t = this.filters.to || '—'
+      return `${f} / ${t}`
+    },
+    daySeries () {
+      return [{
+        name: 'Total',
+        data: this.byDay.map(r => Number(r.t || 0))
+      }]
+    },
+    dayChartOptions () {
+      return {
+        chart: { toolbar: { show: false } },
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 2 },
+        xaxis: { categories: this.byDay.map(r => r.d) },
+        yaxis: { labels: { formatter: v => this.formatMoney(v) } }
+      }
+    },
+    hourSeries () {
+      return [{
+        name: 'Total',
+        data: this.byHour.map(r => Number(r.t || 0))
+      }]
+    },
+    hourChartOptions () {
+      return {
+        chart: { toolbar: { show: false } },
+        plotOptions: { bar: { columnWidth: '40%' } },
+        dataLabels: { enabled: false },
+        xaxis: { categories: this.byHour.map(r => String(r.h).padStart(2, '0') + ':00') },
+        yaxis: { labels: { formatter: v => this.formatMoney(v) } }
+      }
+    },
+    statusSeries () {
+      return this.byStatus.map(r => Number(r.t || 0))
+    },
+    statusChartOptions () {
+      return {
+        labels: this.byStatus.map(r => r.status),
+        legend: { position: 'bottom' }
+      }
     }
   },
+  mounted () {
+    this.reload()
+  },
   methods: {
-    setLang (l) {
-      this.lang = l
-      this.$setLang(l) // boot/i18n.js
-      this.$q.notify({ type: 'positive', message: `Idioma: ${l.toUpperCase()}` })
-    },
-    formatEUR (n) {
-      // opcional: si quieres formateo según idioma, dímelo y lo ajustamos
-      return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n)
-    },
-    inc (type) {
-      if (type === 'adult') this.adults++
-      if (type === 'kid') this.kids++
-    },
-    dec (type) {
-      if (type === 'adult') this.adults = Math.max(0, this.adults - 1)
-      if (type === 'kid') this.kids = Math.max(0, this.kids - 1)
-    },
-    async onBuy () {
+    formatMoney (n) {
+      const num = Number(n || 0)
       try {
-        this.loading = true
-
-        const items = [
-          { name: 'Entrada Adulto', qty: this.adults, unit_amount: Math.round(this.priceAdult * 100) },
-          { name: 'Entrada Niño', qty: this.kids, unit_amount: Math.round(this.priceKid * 100) }
-        ].filter(i => i.qty > 0)
-
-        const { data } = await this.$axios.post('stripe/checkout', {
-          items,
-          customer_email: null,
-          metadata: {
-            isEU: this.isEU ? '1' : '0',
-            date: this.date,
-            time: this.time || '',
-            adults: String(this.adults),
-            kids: String(this.kids),
-            total: String(this.total)
-          }
-        })
-
-        window.location.href = data.checkout_url
+        return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(num)
       } catch (e) {
-        console.error(e)
-        this.$q.notify({ type: 'negative', message: 'Error creando el checkout. Revisa consola/Network.' })
+        return `${num} EUR`
+      }
+    },
+    buildParams () {
+      return {
+        from: this.filters.from || null,
+        to: this.filters.to || null,
+        time_from: this.filters.time_from || null,
+        time_to: this.filters.time_to || null
+      }
+    },
+    resetFilters () {
+      this.filters = { from: '', to: '', time_from: '', time_to: '' }
+      this.reload()
+    },
+    async reload () {
+      this.loading = true
+      try {
+        const { data } = await this.$axios.get('dashboard/summary', { params: this.buildParams() })
+        this.totals = data.totals || { count: 0, amount: 0 }
+        this.byDay = data.by_day || []
+        this.byHour = data.by_hour || []
+        this.byStatus = data.by_status || []
+      } catch (e) {
+        this.$alert.error(e.response?.data?.message || 'Error cargando dashboard')
       } finally {
         this.loading = false
       }
@@ -236,3 +229,6 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+</style>

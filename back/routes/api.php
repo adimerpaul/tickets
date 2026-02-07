@@ -9,6 +9,7 @@ use App\Http\Controllers\EventoHorarioController;
 use App\Http\Controllers\EventoPrecioController;
 use App\Http\Controllers\MonedaController;
 use App\Http\Controllers\IdiomaController;
+use App\Http\Controllers\DashboardController;
 
 Route::post('/stripe/checkout', [StripeController::class, 'checkout']);
 Route::post('/stripe/webhook', [StripeController::class, 'webhook']);
@@ -45,6 +46,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{order}/email-history', [OrderController::class, 'emailHistory']);
     Route::post('/orders/{order}/refund', [OrderController::class, 'refund']);
     Route::get('/orders-pdf', [OrderController::class, 'pdfList']); // pdf del listado filtrado
+
+    Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
 
 // eventos
     Route::get('/eventos', [EventoController::class, 'index']);
