@@ -202,6 +202,7 @@ export default {
     openNew () {
       this.current = {}
       this.dlg = true
+      this.open = true
     },
 
     openEdit (row) {
