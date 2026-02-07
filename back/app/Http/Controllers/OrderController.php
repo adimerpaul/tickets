@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Stripe\Refund;
+use Stripe\Stripe;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use function Laravel\Prompts\error;
 
@@ -148,6 +150,39 @@ class OrderController extends Controller
 
         return response()->json(['items' => $rows]);
     }
+
+    public function refund(Order $order)
+    {
+        if (!$order->payment_intent_id) {
+            return response()->json(['message' => 'La orden no tiene payment_intent_id'], 422);
+        }
+        if ($order->status === 'REFUND') {
+            return response()->json(['message' => 'La orden ya fue reembolsada'], 422);
+        }
+
+        Stripe::setApiKey(config('services.stripe.secret'));
+
+        try {
+            $refund = Refund::create([
+                'payment_intent' => $order->payment_intent_id,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Error al crear el reembolso',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+
+        $order->status = 'REFUND';
+        $order->refund_id = $refund->id ?? null;
+        $order->refunded_at = now();
+        $order->save();
+
+        return response()->json([
+            'message' => 'Reembolso realizado',
+            'refund_id' => $order->refund_id,
+        ]);
+    }
     function update(Request $request, Order $order)
     {
         $data = $request->only([
@@ -250,7 +285,9 @@ class OrderController extends Controller
             });
         }
 
-        if ($request->filled('status')) {
+        if ($request->boolean('exclude_pending')) {
+            $q->where('status', '!=', 'PENDING');
+        } elseif ($request->filled('status')) {
             $q->where('status', $request->status);
         }
 

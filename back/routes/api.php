@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders/{order}/sendEmail', [OrderController::class, 'sendEmailWithEntradasPdf']);
     Route::post('/orders/{order}/send-status-email', [OrderController::class, 'sendStatusEmail']);
     Route::get('/orders/{order}/email-history', [OrderController::class, 'emailHistory']);
+    Route::post('/orders/{order}/refund', [OrderController::class, 'refund']);
     Route::get('/orders-pdf', [OrderController::class, 'pdfList']); // pdf del listado filtrado
 
 // eventos

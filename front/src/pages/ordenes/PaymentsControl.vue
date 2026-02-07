@@ -19,7 +19,7 @@
           <q-input
             dense outlined
             label="Estado"
-            :model-value="'PAID'"
+            :model-value="'Todos excepto PENDING'"
             disable
           />
         </div>
@@ -77,7 +77,7 @@
           color="primary"
           no-caps
           icon="picture_as_pdf"
-          label="PDF (pagos efectivos)"
+          label="PDF (sin pendientes)"
           :disable="loading || !orders.length"
           @click="pdfListJs()"
           class="q-mr-sm"
@@ -160,6 +160,11 @@
                   <q-item clickable @click="openEmailHistory(o)" v-close-popup>
                     <q-item-section avatar><q-icon name="history" /></q-item-section>
                     <q-item-section>Historial de correos</q-item-section>
+                  </q-item>
+                  <q-separator />
+                  <q-item clickable @click="refundOrder(o)" v-close-popup>
+                    <q-item-section avatar><q-icon name="currency_exchange" /></q-item-section>
+                    <q-item-section>Hacer reembolso</q-item-section>
                   </q-item>
                 </q-list>
               </q-btn-dropdown>
@@ -485,7 +490,7 @@ export default {
     buildParams () {
       return {
         search: this.filters.search || null,
-        status: 'PAID',
+        exclude_pending: true,
         from: this.filters.from || null,
         to: this.filters.to || null,
         page: this.page,
@@ -589,6 +594,25 @@ export default {
     openPdf (url) {
       window.open(url, '_blank')
     },
+    refundOrder (o) {
+      this.$q.dialog({
+        title: 'Hacer reembolso',
+        message: `¿Deseas reembolsar la orden #${o.id}? Esta accion no se puede deshacer.`,
+        cancel: true,
+        persistent: true
+      }).onOk(async () => {
+        try {
+          this.loading = true
+          await this.$axios.post(`orders/${o.id}/refund`)
+          this.$alert.success('Reembolso realizado')
+          this.reloadAll()
+        } catch (e) {
+          this.$alert.error(e.response?.data?.message || 'Error al reembolsar')
+        } finally {
+          this.loading = false
+        }
+      })
+    },
 
     changueLocalizador (o) {
       this.$q.dialog({
@@ -618,7 +642,7 @@ export default {
     pdfListJs () {
       const doc = new jsPDF('l', 'mm', 'a4')
       doc.setFontSize(14)
-      doc.text('Control de Pagos', 14, 14)
+      doc.text('Control de Pagos (sin pendientes)', 14, 14)
 
       const rows = this.orders.map(o => ([
         `#${o.id}`,
