@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             'Dashboard',
             'Usuarios',
             'Eventos',
+            'Monedas',
             'Reservas',
             'Idiomas',
             'Precios',
@@ -46,6 +47,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
                 EventoSeeder::class,
                 MonedaSeeder::class,
+                IdiomaSeeder::class,
 //                EventoHorarioSeeder::class,
         ]);
     }

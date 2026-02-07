@@ -8,6 +8,7 @@ use App\Http\Controllers\EventoController;
 use App\Http\Controllers\EventoHorarioController;
 use App\Http\Controllers\EventoPrecioController;
 use App\Http\Controllers\MonedaController;
+use App\Http\Controllers\IdiomaController;
 
 Route::post('/stripe/checkout', [StripeController::class, 'checkout']);
 Route::post('/stripe/webhook', [StripeController::class, 'webhook']);
@@ -85,6 +86,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/monedas', [MonedaController::class, 'store']);
     Route::put('/monedas/{moneda}', [MonedaController::class, 'update']);
     Route::delete('/monedas/{moneda}', [MonedaController::class, 'destroy']);
+
+    // IDIOMAS (global)
+    Route::get('/idiomas', [IdiomaController::class, 'index']);
+    Route::post('/idiomas', [IdiomaController::class, 'store']);
+    Route::put('/idiomas/{idioma}', [IdiomaController::class, 'update']);
+    Route::delete('/idiomas/{idioma}', [IdiomaController::class, 'destroy']);
 
     Route::prefix('eventos/{evento}')->group(function () {
         Route::get('horarios/month', [EventoHorarioController::class, 'month']);   // para pintar calendario
