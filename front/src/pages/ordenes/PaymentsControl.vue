@@ -16,13 +16,11 @@
         </div>
 
         <div class="col-12 col-sm-6 col-md-2">
-          <q-select
-            v-model="filters.status"
+          <q-input
             dense outlined
             label="Estado"
-            :options="statusOptions"
-            emit-value map-options
-            clearable
+            :model-value="'PAID'"
+            disable
           />
         </div>
 
@@ -44,6 +42,31 @@
       </q-card-section>
     </q-card>
 
+    <div class="row q-col-gutter-md q-mb-md">
+      <div class="col-12 col-sm-6 col-md-3">
+        <q-card flat bordered>
+          <q-item class="bg-positive text-white">
+            <q-item-section avatar><q-icon name="check_circle" size="28px" /></q-item-section>
+            <q-item-section>
+              <q-item-label caption class="text-white">Pagos efectivos</q-item-label>
+              <q-item-label class="text-h6">{{ totalRows }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-card>
+      </div>
+      <div class="col-12 col-sm-6 col-md-3">
+        <q-card flat bordered>
+          <q-item class="bg-indigo-8 text-white">
+            <q-item-section avatar><q-icon name="paid" size="28px" /></q-item-section>
+            <q-item-section>
+              <q-item-label caption class="text-white">Total (página)</q-item-label>
+              <q-item-label class="text-h6">{{ formatMoney(pageTotal, pageCurrency) }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-card>
+      </div>
+    </div>
+
     <q-card flat bordered>
       <q-card-section class="row items-center">
         <div class="text-subtitle1 text-weight-bold">Listado</div>
@@ -54,7 +77,7 @@
           color="primary"
           no-caps
           icon="picture_as_pdf"
-          label="PDF (lista filtrada)"
+          label="PDF (pagos efectivos)"
           :disable="loading || !orders.length"
           @click="pdfListJs()"
           class="q-mr-sm"
@@ -394,23 +417,17 @@ export default {
 
       filters: {
         search: '',
-        status: null,
         from: '',
         to: ''
       },
-
-      statusOptions: [
-        { label: 'PENDING', value: 'PENDING' },
-        { label: 'PAID', value: 'PAID' },
-        { label: 'EXPIRED', value: 'EXPIRED' },
-        { label: 'FAILED', value: 'FAILED' }
-      ],
 
       orders: [],
       page: 1,
       perPage: 15,
       lastPage: 1,
       totalRows: 0,
+      pageTotal: 0,
+      pageCurrency: 'EUR',
 
       detailDialog: false,
       detail: {},
@@ -468,7 +485,7 @@ export default {
     buildParams () {
       return {
         search: this.filters.search || null,
-        status: this.filters.status || null,
+        status: 'PAID',
         from: this.filters.from || null,
         to: this.filters.to || null,
         page: this.page,
@@ -479,7 +496,7 @@ export default {
     },
 
     resetFilters () {
-      this.filters = { search: '', status: null, from: '', to: '' }
+      this.filters = { search: '', from: '', to: '' }
       this.page = 1
       this.reloadAll()
     },
@@ -501,11 +518,21 @@ export default {
         this.page = data.current_page || 1
         this.lastPage = data.last_page || 1
         this.totalRows = data.total || 0
+        this.computePageTotals()
       } catch (e) {
         this.$alert.error(e.response?.data?.message || 'Error cargando órdenes')
       } finally {
         this.loading = false
       }
+    },
+    computePageTotals () {
+      if (!this.orders.length) {
+        this.pageTotal = 0
+        this.pageCurrency = 'EUR'
+        return
+      }
+      this.pageTotal = this.orders.reduce((sum, o) => sum + Number(o.amount_total || 0), 0)
+      this.pageCurrency = (this.orders[0].currency || 'eur').toUpperCase()
     },
 
     openDetail (o) {
