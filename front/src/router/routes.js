@@ -11,6 +11,16 @@ const routes = [
         component: () => import('pages/usuarios/Usuarios.vue'),
         meta: {requiresAuth: true, perm: 'Usuarios'}
       },
+      {
+        path: '/monedas',
+        component: () => import('pages/monedas/Monedas.vue'),
+        meta: {requiresAuth: true, perm: 'Monedas'}
+      },
+      {
+        path: '/idiomas',
+        component: () => import('pages/idiomas/Idiomas.vue'),
+        meta: {requiresAuth: true, perm: 'Idiomas'}
+      },
       // eventos
       {
         path: '/eventos',

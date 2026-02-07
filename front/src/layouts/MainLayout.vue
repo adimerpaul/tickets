@@ -154,6 +154,44 @@
           </q-item-section>
         </q-item>
 
+        <!-- MONEDAS -->
+        <q-item
+          dense
+          to="/monedas"
+          exact
+          clickable
+          class="menu-item"
+          active-class="menu-active"
+          v-close-popup
+          v-if="hasPermission('Monedas')"
+        >
+          <q-item-section avatar>
+            <q-icon name="paid" class="text-white" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-white">Monedas</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <!-- IDIOMAS -->
+        <q-item
+          dense
+          to="/idiomas"
+          exact
+          clickable
+          class="menu-item"
+          active-class="menu-active"
+          v-close-popup
+          v-if="hasPermission('Idiomas')"
+        >
+          <q-item-section avatar>
+            <q-icon name="translate" class="text-white" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-white">Idiomas</q-item-label>
+          </q-item-section>
+        </q-item>
+
         <!-- EVENTOS CRUD -->
         <q-item
           dense
