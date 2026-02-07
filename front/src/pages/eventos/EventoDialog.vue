@@ -80,7 +80,24 @@
                 />
               </div>
               <div class="col-12 col-md-3">
-                <q-input v-model="local.moneda" dense outlined label="Moneda" />
+                <q-select
+                  v-model="local.moneda_id"
+                  dense outlined
+                  label="Moneda"
+                  :options="monedas.map(m => ({ label: `${m.codigo} - ${m.nombre}`, value: m.id }))"
+                  emit-value
+                  map-options
+                />
+              </div>
+              <div class="col-12 col-md-3">
+                <q-select
+                  v-model="local.idioma_id"
+                  dense outlined
+                  label="Idioma"
+                  :options="idiomas.map(i => ({ label: `${i.codigo} - ${i.nombre}`, value: i.id }))"
+                  emit-value
+                  map-options
+                />
               </div>
 
               <div class="col-12 col-md-6">
@@ -146,6 +163,8 @@ export default {
       tab: 'general',
       loading: false,
       local: {},
+      monedas: [],
+      idiomas: [],
 
       reglaOptions: [
         { label: 'Todos', value: 'ALL' },
@@ -155,8 +174,16 @@ export default {
     }
   },
   mounted() {
-    this.local = { ...this.evento };
-    console.log(this.evento);
+    this.initLocal()
+    this.loadOptions()
+  },
+  watch: {
+    evento: {
+      deep: true,
+      handler () {
+        this.initLocal()
+      }
+    }
   },
   // watch: {
   //   value: {
@@ -194,14 +221,40 @@ export default {
         categoria: ev.categoria || '',
         orden: ev.orden ?? 0,
         regla_nacionalidad: ev.regla_nacionalidad || 'ALL',
-        moneda: ev.moneda || 'EGP',
+        moneda_id: ev.moneda_id ?? ev.moneda?.id ?? null,
+        idioma_id: ev.idioma_id ?? ev.idioma?.id ?? null,
 
         slot_interval_min: ev.slot_interval_min || 30,
         semana_hora_inicio: (ev.semana_hora_inicio || '09:00').slice(0, 5),
         semana_hora_fin: (ev.semana_hora_fin || '17:00').slice(0, 5),
         generar_semanas: ev.generar_semanas || 52
       }
+      if (!this.local.moneda_id && this.monedas.length) {
+        this.local.moneda_id = this.monedas[0].id
+      }
+      if (!this.local.idioma_id && this.idiomas.length) {
+        this.local.idioma_id = this.idiomas[0].id
+      }
       this.tab = this.local.id ? 'general' : 'general'
+    },
+    async loadOptions () {
+      try {
+        const [rm, ri] = await Promise.all([
+          this.$axios.get('monedas', { params: { solo_activos: 1 } }),
+          this.$axios.get('idiomas', { params: { solo_activos: 1 } })
+        ])
+        this.monedas = rm.data.items || []
+        this.idiomas = ri.data.items || []
+
+        if (!this.local.moneda_id && this.monedas.length) {
+          this.local.moneda_id = this.monedas[0].id
+        }
+        if (!this.local.idioma_id && this.idiomas.length) {
+          this.local.idioma_id = this.idiomas[0].id
+        }
+      } catch (e) {
+        this.$alert.error('No se pudieron cargar monedas/idiomas')
+      }
     },
 
     slugify (text) {
@@ -222,6 +275,10 @@ export default {
     save () {
       if (!this.local.nombre || !this.local.slug) {
         this.$alert.error('Nombre y slug son requeridos')
+        return
+      }
+      if (!this.local.moneda_id || !this.local.idioma_id) {
+        this.$alert.error('Moneda e idioma son requeridos')
         return
       }
 

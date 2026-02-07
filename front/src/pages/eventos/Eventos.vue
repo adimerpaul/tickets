@@ -162,7 +162,8 @@ export default {
         { name: 'nombre', label: 'Nombre', align: 'left', field: 'nombre', sortable: true },
         { name: 'slug', label: 'Slug', align: 'left', field: 'slug', sortable: true },
         { name: 'ciudad', label: 'Ciudad', align: 'left', field: 'ciudad' },
-        { name: 'moneda', label: 'Moneda', align: 'left', field: 'moneda' },
+        { name: 'moneda', label: 'Moneda', align: 'left', field: row => row.moneda?.codigo || row.moneda_id || '' },
+        { name: 'idioma', label: 'Idioma', align: 'left', field: row => row.idioma?.codigo || row.idioma_id || '' },
         { name: 'activo', label: 'Estado', align: 'left', field: 'activo' }
       ]
     }

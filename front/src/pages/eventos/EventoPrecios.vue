@@ -248,6 +248,43 @@
           <q-input v-model="dlgTipo.form.slug" dense outlined label="Slug" class="q-mt-sm" />
           <q-input v-model.number="dlgTipo.form.orden" dense outlined type="number" label="Orden" class="q-mt-sm" />
           <q-toggle v-model="dlgTipo.form.activo" label="Activo" />
+
+          <div class="q-mt-md">
+            <div class="text-subtitle2 text-weight-medium q-mb-sm">Imagen</div>
+            <div class="avatar-box">
+              <q-btn
+                icon="edit"
+                size="10px"
+                class="absolute q-mt-sm q-ml-sm"
+                @click="$refs.tipoImgInput.click()"
+                dense
+                outline
+                label="Cambiar imagen"
+                no-caps
+              />
+              <img
+                v-if="dlgTipo.form.imagen"
+                :src="imgTipo(dlgTipo.form.imagen)"
+                class="avatar-img"
+              />
+              <div v-else class="row items-center justify-center avatar-img">
+                <q-icon name="image" size="72px" />
+              </div>
+              <input
+                ref="tipoImgInput"
+                type="file"
+                style="display:none"
+                @change="onTipoImgChange"
+                accept="image/*"
+              />
+            </div>
+            <q-input
+              v-model="dlgTipo.form.imagen"
+              dense outlined
+              label="URL/Archivo (solo lectura si subes)"
+              class="q-mt-sm"
+            />
+          </div>
         </q-card-section>
 
         <q-card-actions align="right">
@@ -500,7 +537,7 @@ export default {
     },
 
     // ===== TIPOS ENTRADA =====
-    openTipoNew () { this.dlgTipo.form = { nombre: '', slug: '', orden: 0, activo: true }; this.dlgTipo.open = true },
+    openTipoNew () { this.dlgTipo.form = { nombre: '', slug: '', orden: 0, activo: true, imagen: '' }; this.dlgTipo.open = true },
     openTipoEdit (r) { this.dlgTipo.form = { ...r }; this.dlgTipo.open = true },
     async saveTipo () {
       const f = this.dlgTipo.form
@@ -514,6 +551,35 @@ export default {
       this.$alert.dialog('¿Eliminar tipo?').onOk(() =>
         this.$axios.delete(`evento-tipos-entrada/${r.id}`).then(() => this.loadAll())
       )
+    },
+
+    imgTipo (img) {
+      if (!img) return ''
+      if (img.startsWith('http://') || img.startsWith('https://')) return img
+      return `${this.$url}../../images/${img}`
+    },
+
+    onTipoImgChange (event) {
+      const file = event.target.files[0]
+      if (!file) return
+      if (!this.dlgTipo.form.id) {
+        this.$alert.error('Guarda el tipo antes de subir imagen')
+        return
+      }
+
+      const formData = new FormData()
+      formData.append('imagen', file)
+
+      this.dlgTipo.loading = true
+      this.$axios.post(`evento-tipos-entrada/${this.dlgTipo.form.id}/imagen`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+        .then(res => {
+          this.dlgTipo.form.imagen = res.data.imagen
+          this.$alert.success('Imagen actualizada')
+        })
+        .catch(e => this.$alert.error(e.response?.data?.message || 'No se pudo subir imagen'))
+        .finally(() => { this.dlgTipo.loading = false })
     },
 
     // ===== SEGMENTOS =====
@@ -535,3 +601,18 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.avatar-box {
+  position: relative;
+  width: 100%;
+}
+.avatar-img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.08);
+  background: #f6f7f9;
+}
+</style>

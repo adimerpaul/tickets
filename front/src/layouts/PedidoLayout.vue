@@ -134,14 +134,11 @@
                 <q-banner v-if="slotKey && slotResumen" rounded class="bg-grey-1 q-mt-sm">
                   <div class="text-caption text-grey-8">
                     <b>Disponibilidad:</b>
-                    Adulto: {{ slotResumen.adulto.disponibles }} disponibles ·
-                    Niño: {{ slotResumen.nino.disponibles }} disponibles
+                    {{ slotResumen.disponibles }} disponibles
                   </div>
 
                   <div class="text-caption text-grey-8 q-mt-xs">
-                    <b>Precios:</b>
-                    Adulto: {{ formatCurrency(priceAdult) }} ·
-                    Niño: {{ formatCurrency(priceKid) }}
+                    <b>Total:</b> {{ formatCurrency(total) }}
                   </div>
                 </q-banner>
 
@@ -172,7 +169,7 @@
                     </div>
 
                     <q-avatar size="74px" class="q-mt-sm shadow-2">
-                      <q-img :src="t.imagen || defaultTipoImg" />
+                      <q-img :src="tipoImg(t.imagen) || defaultTipoImg" />
                     </q-avatar>
                   </div>
                 </div>
@@ -180,24 +177,19 @@
                 <div class="text-subtitle2 text-grey-8 q-mb-sm">N° de entradas</div>
 
                 <div class="row q-col-gutter-sm q-mb-md">
-                  <div class="col-12">
+                  <div
+                    v-for="s in segmentos"
+                    :key="s.id"
+                    class="col-12"
+                  >
                     <div class="counter-pill">
-                      <div class="text-grey-8">{{ adults }} Adulto</div>
-                      <q-space />
-                      <div class="row items-center q-gutter-xs">
-                        <q-btn round dense flat icon="remove" class="counter-btn" @click="dec('adult')" />
-                        <q-btn round dense flat icon="add" class="counter-btn" @click="inc('adult')" />
+                      <div class="text-grey-8">
+                        {{ segmentoCounts[String(s.slug || '').toUpperCase()] || 0 }} {{ s.nombre }}
                       </div>
-                    </div>
-                  </div>
-
-                  <div class="col-12">
-                    <div class="counter-pill">
-                      <div class="text-grey-8">{{ kids }} Niños</div>
                       <q-space />
                       <div class="row items-center q-gutter-xs">
-                        <q-btn round dense flat icon="remove" class="counter-btn" @click="dec('kid')" />
-                        <q-btn round dense flat icon="add" class="counter-btn" @click="inc('kid')" />
+                        <q-btn round dense flat icon="remove" class="counter-btn" @click="decSegmento(s)" />
+                        <q-btn round dense flat icon="add" class="counter-btn" @click="incSegmento(s)" />
                       </div>
                     </div>
                   </div>
@@ -355,16 +347,14 @@
 
                     <q-separator spaced />
 
-                    <div class="row items-center q-mb-sm">
-                      <div class="text-body2">Adultos</div>
+                    <div
+                      v-for="s in segmentos"
+                      :key="s.id"
+                      class="row items-center q-mb-sm"
+                    >
+                      <div class="text-body2">{{ s.nombre }}</div>
                       <q-space />
-                      <div class="text-body2">{{ adults }}</div>
-                    </div>
-
-                    <div class="row items-center q-mb-sm">
-                      <div class="text-body2">Niños</div>
-                      <q-space />
-                      <div class="text-body2">{{ kids }}</div>
+                      <div class="text-body2">{{ segmentoCounts[String(s.slug || '').toUpperCase()] || 0 }}</div>
                     </div>
 
                     <q-separator spaced />
@@ -407,6 +397,7 @@ export default {
       evento: null,
       nacionalidades: [],
       tipos: [],
+      segmentos: [],
       precios: [],
 
       // index interno
@@ -426,9 +417,8 @@ export default {
       nacionalidadId: null,
       tipoEntradaId: null,
 
-      // counters
-      adults: 1,
-      kids: 0,
+      // counters por segmento (slug)
+      segmentoCounts: {},
 
       // loading
       loading: false,
@@ -486,44 +476,44 @@ export default {
       return map[this.slotKey] || null
     },
 
-    priceAdult () {
-      return this.getPrecioVenta('ADULTO')
-    },
-
-    priceKid () {
-      // si no tienes NINO como segmento, puedes cambiar a 'NINO' o 'NIÑO' según guardes
-      return this.getPrecioVenta('NINO')
+    totalQty () {
+      return (this.segmentos || []).reduce((sum, s) => {
+        const key = String(s.slug || '').toUpperCase()
+        return sum + Number(this.segmentoCounts[key] || 0)
+      }, 0)
     },
 
     total () {
-      return (this.adults * this.priceAdult) + (this.kids * this.priceKid)
+      return (this.segmentos || []).reduce((sum, s) => {
+        const key = String(s.slug || '').toUpperCase()
+        const qty = Number(this.segmentoCounts[key] || 0)
+        const price = this.getPrecioVenta(key)
+        return sum + (qty * price)
+      }, 0)
     },
 
     priceMissing () {
-      // si el usuario quiere comprar y no hay precio configurado, bloqueamos
-      const wantsAdult = this.adults > 0
-      const wantsKid = this.kids > 0
-
-      const pA = wantsAdult ? this.priceAdult : 1
-      const pK = wantsKid ? this.priceKid : 1
-
-      if (wantsAdult && (!pA || pA <= 0)) return true
-      if (wantsKid && (!pK || pK <= 0)) return true
+      for (const s of (this.segmentos || [])) {
+        const key = String(s.slug || '').toUpperCase()
+        const qty = Number(this.segmentoCounts[key] || 0)
+        if (qty > 0) {
+          const p = this.getPrecioVenta(key)
+          if (!p || p <= 0) return true
+        }
+      }
       return false
     },
 
     canBuy () {
       if (!this.date || !this.slotKey) return false
       if (!this.nacionalidadId || !this.tipoEntradaId) return false
-      if (this.total <= 0) return false
+      if (this.totalQty <= 0) return false
       if (this.priceMissing) return false
 
       const r = this.slotResumen
       if (!r) return false
 
-      if (this.adults > 0 && this.adults > r.adulto.disponibles) return false
-      if (this.kids > 0 && this.kids > r.nino.disponibles) return false
-
+      if (this.totalQty > r.disponibles) return false
       return true
     }
   },
@@ -542,6 +532,7 @@ export default {
         this.tipos = data.tipos_entrada || []
         this.horarios = data.horarios || []
         this.precios = data.precios || []
+        this.segmentos = data.segmentos || []
 
         // defaults
         if (!this.nacionalidadId && this.nacionalidades.length) {
@@ -554,6 +545,7 @@ export default {
         // construir indices
         this.buildHorariosIndex()
         this.buildPreciosMap()
+        this.initSegmentoCounts()
       } catch (e) {
         console.error(e)
         this.$alert.error(e.response?.data?.message || 'Error cargando checkout-data')
@@ -564,14 +556,18 @@ export default {
 
     buildPreciosMap () {
       const m = new Map()
-      const moneda = (this.evento?.moneda || 'EUR').toUpperCase()
+      const moneda = (this.evento?.moneda_codigo || this.evento?.moneda?.codigo || this.evento?.moneda || 'EUR').toUpperCase()
 
       for (const p of this.precios) {
         const nacId = Number(p.nacionalidad_id)
         const tipoId = Number(p.tipo_entrada_id)
         const seg = String(p.segmento || '').toUpperCase()
 
-        const price = Number(p?.monedas?.[moneda] || 0)
+        let price = Number(p?.monedas?.[moneda] || 0)
+        if (!price && p?.monedas) {
+          const first = Object.values(p.monedas)[0]
+          price = Number(first || 0)
+        }
         const key = this.mkPrecioKey(nacId, tipoId, seg)
         m.set(key, price)
       }
@@ -586,7 +582,24 @@ export default {
     getPrecioVenta (segmento) {
       if (!this.nacionalidadId || !this.tipoEntradaId) return 0
       const key = this.mkPrecioKey(this.nacionalidadId, this.tipoEntradaId, segmento)
-      return Number(this.preciosMap.get(key) || 0)
+      const direct = Number(this.preciosMap.get(key) || 0)
+      if (direct > 0) return direct
+      // fallback: si solo existe GENERAL, usarlo para adulto/niÃ±o
+      const generalKey = this.mkPrecioKey(this.nacionalidadId, this.tipoEntradaId, 'GENERAL')
+      return Number(this.preciosMap.get(generalKey) || 0)
+    },
+
+    initSegmentoCounts () {
+      const counts = {}
+      for (const s of (this.segmentos || [])) {
+        const key = String(s.slug || '').toUpperCase()
+        counts[key] = 0
+      }
+      if (this.segmentos && this.segmentos.length) {
+        const firstKey = String(this.segmentos[0].slug || '').toUpperCase()
+        counts[firstKey] = Math.max(1, counts[firstKey] || 0)
+      }
+      this.segmentoCounts = counts
     },
 
     // =========================
@@ -594,13 +607,6 @@ export default {
     // =========================
     buildHorariosIndex () {
       const byDate = {}
-
-      const normPlan = (p) => {
-        const s = String(p || '').toLowerCase()
-        if (s.includes('adult')) return 'adulto'
-        if (s.includes('ni')) return 'nino'
-        return s
-      }
 
       for (const h of this.horarios) {
         const fecha = (h.fecha || (h.starts_at || '').slice(0, 10))
@@ -611,32 +617,22 @@ export default {
         const slotKey = h.starts_at
         if (!byDate[fecha][slotKey]) {
           byDate[fecha][slotKey] = {
-            adulto: { id: null, disponibles: 0, capacidad: 0, reservados: 0 },
-            nino:   { id: null, disponibles: 0, capacidad: 0, reservados: 0 },
+            id: null,
+            disponibles: 0,
+            capacidad: 0,
+            reservados: 0,
             label: this.formatTimeLabel(slotKey)
           }
         }
 
-        const plan = normPlan(h.plan)
         const cap = Number(h.capacidad || 0)
         const res = Number(h.reservados || 0)
         const disp = Math.max(0, cap - res)
 
-        if (plan === 'adulto') {
-          byDate[fecha][slotKey].adulto = {
-            id: h.id,
-            disponibles: disp,
-            capacidad: cap,
-            reservados: res
-          }
-        } else if (plan === 'nino') {
-          byDate[fecha][slotKey].nino = {
-            id: h.id,
-            disponibles: disp,
-            capacidad: cap,
-            reservados: res
-          }
-        }
+        byDate[fecha][slotKey].id = h.id
+        byDate[fecha][slotKey].disponibles = disp
+        byDate[fecha][slotKey].capacidad = cap
+        byDate[fecha][slotKey].reservados = res
       }
 
       // limpiar vacíos
@@ -644,7 +640,7 @@ export default {
         const slots = byDate[fecha]
         for (const k of Object.keys(slots)) {
           const s = slots[k]
-          const hasAny = (s.adulto.id || s.nino.id)
+          const hasAny = s.id
           if (!hasAny) delete slots[k]
         }
         if (Object.keys(slots).length === 0) delete byDate[fecha]
@@ -695,18 +691,31 @@ export default {
     },
 
     formatCurrency (n) {
-      const cur = (this.evento?.moneda || 'EUR').toUpperCase()
+      const cur = (this.evento?.moneda_codigo || this.evento?.moneda?.codigo || this.evento?.moneda || 'EUR').toUpperCase()
       return new Intl.NumberFormat('es-ES', { style: 'currency', currency: cur }).format(Number(n || 0))
     },
 
-    inc (type) {
-      if (type === 'adult') this.adults++
-      if (type === 'kid') this.kids++
+    segKey (s) {
+      return String(s.slug || '').toUpperCase()
     },
 
-    dec (type) {
-      if (type === 'adult') this.adults = Math.max(0, this.adults - 1)
-      if (type === 'kid') this.kids = Math.max(0, this.kids - 1)
+    incSegmento (s) {
+      const k = this.segKey(s)
+      const cur = Number(this.segmentoCounts[k] || 0)
+      this.$set ? this.$set(this.segmentoCounts, k, cur + 1) : (this.segmentoCounts[k] = cur + 1)
+    },
+
+    decSegmento (s) {
+      const k = this.segKey(s)
+      const cur = Number(this.segmentoCounts[k] || 0)
+      const next = Math.max(0, cur - 1)
+      this.$set ? this.$set(this.segmentoCounts, k, next) : (this.segmentoCounts[k] = next)
+    },
+
+    tipoImg (img) {
+      if (!img) return ''
+      if (img.startsWith('http://') || img.startsWith('https://')) return img
+      return `${this.$url}../../images/${img}`
     },
 
     async onBuy () {
@@ -757,31 +766,29 @@ export default {
           phone: this.phone || ''
         }
 
-        // ids horarios por plan (para sumar reservados en webhook)
-        if (this.adults > 0 && this.slotResumen.adulto?.id) meta.horario_adulto_id = String(this.slotResumen.adulto.id)
-        if (this.kids > 0 && this.slotResumen.nino?.id) meta.horario_nino_id = String(this.slotResumen.nino.id)
+        // id horario (plan ya no se usa)
+        if (this.slotResumen?.id) meta.horario_id = String(this.slotResumen.id)
 
         // cantidades
-        meta.adults = String(this.adults)
-        meta.kids = String(this.kids)
+        meta.total_qty = String(this.totalQty)
         meta.total = String(this.total)
 
-        // items stripe (precio viene de evento_precios)
-        if (this.adults > 0) {
+        const segmentosMeta = []
+        for (const s of (this.segmentos || [])) {
+          const k = this.segKey(s)
+          const qty = Number(this.segmentoCounts[k] || 0)
+          if (qty <= 0) continue
+          const price = this.getPrecioVenta(k)
+          segmentosMeta.push({ id: s.id, slug: s.slug, nombre: s.nombre, qty, price })
+
           items.push({
-            name: `Entrada Adulto - ${this.evento?.nombre || ''} - ${meta.hora_label}`,
-            qty: this.adults,
-            unit_amount: Math.round((this.priceAdult || 0) * 100)
+            name: `Entrada ${s.nombre} - ${this.evento?.nombre || ''} - ${meta.hora_label}`,
+            qty,
+            unit_amount: Math.round((price || 0) * 100)
           })
         }
 
-        if (this.kids > 0) {
-          items.push({
-            name: `Entrada Niño - ${this.evento?.nombre || ''} - ${meta.hora_label}`,
-            qty: this.kids,
-            unit_amount: Math.round((this.priceKid || 0) * 100)
-          })
-        }
+        meta.segmentos = JSON.stringify(segmentosMeta)
 
         if (!items.length) {
           this.$alert.error('Selecciona al menos una entrada.')
