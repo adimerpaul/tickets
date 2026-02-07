@@ -449,6 +449,9 @@ export default {
     if (this.$route.query.session_id) {
       this.$alert.success('¡Gracias por tu compra! Un equipo de soporte se pondrá en contacto contigo pronto.')
     }
+    if (this.$route.query.cancelled) {
+      this.$alert.error('Se canceló el pago. Puedes volver a intentarlo.')
+    }
     await this.loadCheckoutData()
   },
 
