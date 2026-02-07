@@ -48,4 +48,9 @@ class Evento extends Model implements AuditableContract
         return $this->hasMany(\App\Models\EventoPrecio::class, 'evento_id');
     }
 
+    public function monedas()
+    {
+        return $this->hasMany(\App\Models\EventoMoneda::class, 'evento_id');
+    }
+
 }

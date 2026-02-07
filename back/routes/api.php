@@ -91,6 +91,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('horarios/day',   [EventoHorarioController::class, 'day']);     // lista lateral del día
         Route::post('horarios/generate', [EventoHorarioController::class, 'generate']); // generar rango
 
+        // monedas (seleccionadas por evento)
+        Route::get('monedas', [EventoPrecioController::class, 'eventoMonedasIndex']);
+        Route::post('monedas', [EventoPrecioController::class, 'eventoMonedasStore']);
+
         // nacionalidades
         Route::get('nacionalidades', [EventoPrecioController::class, 'nacionalidadesIndex']);
         Route::post('nacionalidades', [EventoPrecioController::class, 'nacionalidadesStore']);

@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Evento;
+use App\Models\EventoMoneda;
 use App\Models\EventoNacionalidad;
 use App\Models\EventoTipoEntrada;
 use App\Models\EventoSegmento;
 use App\Models\EventoPrecio;
+//use App\Models\EventoMoneda;
 use App\Models\Moneda;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +28,65 @@ class EventoPrecioController extends Controller
             ->get();
 
         return response()->json(['items' => $items]);
+    }
+
+    // ==========================
+    // MONEDAS POR EVENTO (seleccionadas)
+    // ==========================
+    public function eventoMonedasIndex(Evento $evento)
+    {
+        $items = EventoMoneda::class::where('evento_id', $evento->id)
+            ->orderBy('id')
+            ->get();
+
+        return response()->json(['items' => $items]);
+    }
+
+    /**
+     * POST /api/eventos/{evento}/monedas
+     * Body:
+     * { "moneda_ids": [1,2,3] }
+     */
+    public function eventoMonedasStore(Request $request, Evento $evento)
+    {
+        $data = $request->validate([
+            'moneda_ids'   => 'nullable|array',
+            'moneda_ids.*' => 'integer',
+        ]);
+
+        $selectedIds = collect($data['moneda_ids'] ?? [])
+            ->map(fn($id) => (int)$id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $activeMonedaIds = Moneda::where('activo', true)->pluck('id')->map(fn($id) => (int)$id)->all();
+
+        return DB::transaction(function () use ($evento, $selectedIds, $activeMonedaIds) {
+            $saved = 0;
+
+            foreach ($activeMonedaIds as $monedaId) {
+                $isActive = in_array($monedaId, $selectedIds, true);
+
+                $row = EventoMoneda::withTrashed()->updateOrCreate(
+                    [
+                        'evento_id' => $evento->id,
+                        'moneda_id' => $monedaId,
+                    ],
+                    [
+                        'activo' => $isActive,
+                    ]
+                );
+
+                if ($row->trashed()) {
+                    $row->restore();
+                }
+
+                $saved++;
+            }
+
+            return response()->json(['message' => 'OK', 'saved' => $saved]);
+        });
     }
 
     // ==========================
