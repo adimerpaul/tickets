@@ -146,6 +146,7 @@
               outlined
               label="Monedas a mostrar"
               style="min-width: 320px"
+              @update:model-value="onMonedaChange"
             />
 
             <q-btn
@@ -221,7 +222,7 @@
         </q-card-section>
 
         <q-card-section>
-          <q-input v-model="dlgNac.form.nombre" dense outlined label="Nombre" />
+          <q-input v-model="dlgNac.form.nombre" dense outlined label="Nombre" @update:model-value="dlgNac.form.slug = dlgNac.form.nombre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '')" />
           <q-input v-model="dlgNac.form.slug" dense outlined label="Slug" class="q-mt-sm" />
           <q-input v-model.number="dlgNac.form.orden" dense outlined type="number" label="Orden" class="q-mt-sm" />
           <q-toggle v-model="dlgNac.form.activo" label="Activo" />
@@ -243,7 +244,7 @@
         </q-card-section>
 
         <q-card-section>
-          <q-input v-model="dlgTipo.form.nombre" dense outlined label="Nombre" />
+          <q-input v-model="dlgTipo.form.nombre" dense outlined label="Nombre" @update:model-value="dlgTipo.form.slug = dlgTipo.form.nombre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '')" />
           <q-input v-model="dlgTipo.form.slug" dense outlined label="Slug" class="q-mt-sm" />
           <q-input v-model.number="dlgTipo.form.orden" dense outlined type="number" label="Orden" class="q-mt-sm" />
           <q-toggle v-model="dlgTipo.form.activo" label="Activo" />
@@ -265,7 +266,7 @@
         </q-card-section>
 
         <q-card-section>
-          <q-input v-model="dlgSeg.form.nombre" dense outlined label="Nombre" />
+          <q-input v-model="dlgSeg.form.nombre" dense outlined label="Nombre" @update:model-value="dlgSeg.form.slug = dlgSeg.form.nombre.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '')" />
           <q-input v-model="dlgSeg.form.slug" dense outlined label="Slug" class="q-mt-sm" />
           <q-input v-model.number="dlgSeg.form.orden" dense outlined type="number" label="Orden" class="q-mt-sm" />
           <q-toggle v-model="dlgSeg.form.activo" label="Activo" />
@@ -291,6 +292,8 @@ export default {
       selectedMonedaIds: [],
       loading: false,
       saving: false,
+      savingMonedas: false,
+      monedasReady: false,
 
       nacionalidades: [],
       tipos: [],
@@ -364,24 +367,27 @@ export default {
 
     async loadAll () {
       this.loading = true
+      this.monedasReady = false
       try {
-        const [rn, rt, rs, rm, rp] = await Promise.all([
+        const [rn, rt, rs, rm, rp, rsel] = await Promise.all([
           this.$axios.get(`eventos/${this.eventoId}/nacionalidades`),
           this.$axios.get(`eventos/${this.eventoId}/tipos-entrada`),
           this.$axios.get(`eventos/${this.eventoId}/segmentos`),
           this.$axios.get(`monedas`, { params: { solo_activos: 1 } }),
-          this.$axios.get(`eventos/${this.eventoId}/precios`)
+          this.$axios.get(`eventos/${this.eventoId}/precios`),
+          this.$axios.get(`eventos/${this.eventoId}/monedas`)
         ])
 
         this.nacionalidades = rn.data.items || []
         this.tipos = rt.data.items || []
         this.segmentos = rs.data.items || []
         this.monedas = rm.data.items || []
-        const dyn = (this.monedasSel || []).map(m => ({
-          name: `moneda_${m.id}`,
-          label: `${m.codigo}`,
-          align: 'left'
-        }))
+        const selItems = rsel.data.items || []
+        const selIds = selItems.filter(i => i.activo).map(i => i.moneda_id)
+        this.selectedMonedaIds = selItems.length > 0
+          ? selIds
+          : (this.monedas || []).map(m => m.id)
+        this.monedasReady = true
 
         this.buildColsPrices()
 
@@ -428,6 +434,23 @@ export default {
         }
       } finally {
         this.loading = false
+      }
+    },
+
+    async onMonedaChange () {
+      if (!this.monedasReady) return
+      this.saveSelectedMonedas()
+    },
+
+    async saveSelectedMonedas () {
+      if (this.savingMonedas) return
+      this.savingMonedas = true
+      try {
+        await this.$axios.post(`eventos/${this.eventoId}/monedas`, {
+          moneda_ids: this.selectedMonedaIds
+        })
+      } finally {
+        this.savingMonedas = false
       }
     },
 

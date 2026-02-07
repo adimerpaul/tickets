@@ -15,6 +15,8 @@
             no-caps
             icon="add"
             label="Generar"
+            :loading="loadingMonth || gen.loading"
+            :disable="loadingMonth || gen.loading"
             @click="openDialogGenerar"
           />
         </q-card-section>
@@ -39,7 +41,15 @@
 <!--            <pre>{{dayItems}}</pre>-->
           </div>
           <q-space />
-          <q-btn flat round dense icon="refresh" @click="selectedDate && fetchDay()" />
+          <q-btn
+            flat
+            round
+            dense
+            icon="refresh"
+            :loading="loadingDay"
+            :disable="loadingDay"
+            @click="selectedDate && fetchDay()"
+          />
         </q-card-section>
 
         <q-separator />
@@ -174,6 +184,31 @@
             </q-btn>
 <!--            <pre>{{it}}</pre>-->
           </template>
+
+          <div class="q-mt-md">
+            <q-btn
+              v-if="dayItems && dayItems.length"
+              class="full-width"
+              no-caps
+              color="positive"
+              :outline="!hasInactive"
+              :loading="loadingDay"
+              :disable="loadingDay || !hasInactive"
+              label="Habilitar todos"
+              @click="toggleAll(true)"
+            />
+            <q-btn
+              v-if="dayItems && dayItems.length"
+              class="full-width q-mt-sm"
+              no-caps
+              color="negative"
+              :outline="!hasActive"
+              :loading="loadingDay"
+              :disable="loadingDay || !hasActive"
+              label="Deshabilitar todos"
+              @click="toggleAll(false)"
+            />
+          </div>
         </q-card-section>
 
 <!--        <q-card-section v-else class="q-pt-sm">-->
@@ -411,6 +446,14 @@ export default {
 
     tabLabel () {
       return this.tab === 'manana' ? 'Mañana' : 'Tarde'
+    },
+
+    hasActive () {
+      return (this.dayItems || []).some(it => it.activo)
+    },
+
+    hasInactive () {
+      return (this.dayItems || []).some(it => !it.activo)
     }
   },
 
@@ -441,10 +484,40 @@ export default {
         .catch(e => this.$alert.error(e.response?.data?.message || 'No se pudo actualizar'))
         .finally(() => { this.loadingDay = false })
     },
+    async toggleAll (activate) {
+      if (!this.selectedDate) return
+      const items = (this.dayItems || []).filter(it => it.activo !== activate)
+      if (!items.length) return
+
+      this.loadingDay = true
+      try {
+        await Promise.all(items.map(it =>
+          this.$axios.put(`evento-horarios/${it.id}`, { activo: activate })
+        ))
+
+        this.$alert.success(activate ? 'Todos habilitados' : 'Todos deshabilitados')
+        await this.fetchDay()
+
+        const api = this.$refs.cal?.getApi?.()
+        if (api) {
+          const start = api.view.activeStart.toISOString().slice(0, 10)
+          const end = api.view.activeEnd.toISOString().slice(0, 10)
+          this.reloadMonthRange(start, end)
+        }
+      } catch (e) {
+        this.$alert.error(e.response?.data?.message || 'No se pudo actualizar')
+      } finally {
+        this.loadingDay = false
+      }
+    },
     formatFecha (ymd) {
       if (!ymd) return ''
       // return moment(ymd).format('dddd D [de] MMMM YYYY') languar espa;ol
-      return moment(ymd).locale('es').format('dddd D [de] MMMM YYYY')
+      const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+      const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+      const d = moment(ymd)
+      return `${dias[d.day()]} ${d.date()} de ${meses[d.month()]} ${d.year()}`
+      // return moment(ymd).locale('es').format('dddd D [de] MMMM YYYY')
     },
 
     hhmm (dt) {
